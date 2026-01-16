@@ -1,8 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { Space } from "antd";
+import { Space, Dropdown, Avatar } from "antd";
+import { UserOutlined, LogoutOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import logoLeft from "../../asset/image/logo.un-IZiTG.png";
 
 const Header = () => {
+  const [userName, setUserName] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("user_name");
+    if (userStr) {
+      setUserName(userStr);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("authorization");
+    localStorage.removeItem("user_name");
+    navigate("/login");
+  };
+
+  const dropdownItems = [
+    {
+      key: "logout",
+      label: "注销",
+      icon: <LogoutOutlined />,
+      onClick: handleLogout,
+    },
+  ];
+
   return (
     <div className="header_wrapper">
       <div className="header_logo_wrapper">
@@ -45,9 +72,17 @@ const Header = () => {
           <path d="M143.662469,32.6109877 C143.429268,32.6109877 143.331058,32.6489065 143.235503,32.7554586 C143.198721,32.7975485 143.183554,32.8392593 143.169903,32.92306 L141.984938,37.4194797 C141.706235,38.995388 139.769339,40.5705379 137.2447,40.5705379 L133.734929,40.5705379 L134.343907,38.2597619 L136.598942,38.2597619 C136.829489,38.2597619 137.008845,38.1752028 137.159762,38.0072222 C137.214365,37.9420018 137.287549,37.8396208 137.296649,37.7345855 L138.232866,33.8065697 C138.508915,32.2287654 140.17545,30.4863933 142.69933,30.4863933 L146.292901,30.4863933 L145.833325,32.6109877 L143.662469,32.6109877 Z M144.472795,35.3506261 L144.873598,33.8964374 L148.525185,33.8964374 C148.975661,31.7873898 148.620741,29.8330511 147.3406,28.5529101 C144.750362,25.9634303 139.330617,26.8435273 135.292637,30.7063228 C134.662804,31.3058201 134.130044,31.9542328 133.644303,32.6170547 L135.84284,32.6170547 L135.332072,34.0750353 L132.705811,34.0750353 C132.455168,34.534612 132.219312,34.9900176 132.038818,35.4530071 L135.153474,35.4530071 L134.65522,36.9109877 L131.594409,36.9109877 C131.071129,39.1372046 131.404815,41.2147795 132.720979,42.5335979 C135.280123,45.0912257 140.682804,44.1917901 144.71851,40.3301323 C145.424938,39.6582099 146.007751,38.9332011 146.534444,38.1884744 L143.710247,38.1884744 L144.140626,36.7339065 L147.442981,36.7339065 C147.684524,36.2709171 147.907866,35.8136155 148.081155,35.3506261 L144.472795,35.3506261 L144.472795,35.3506261 Z"></path>
           <polygon points="90.3621869 44.4617725 91.1254938 44.4617725 91.1254938 0 90.3621869 0"></polygon>
         </svg>
-       
       </div>
-       <div className="right_aligned_child"></div>
+      <div className="right_aligned_child">
+        {userName && (
+          <Dropdown menu={{ items: dropdownItems }} placement="bottomRight">
+            <div style={{ display: "flex", alignItems: "center", cursor: "pointer", gap: "8px" }}>
+              <Avatar icon={<UserOutlined />} />
+              <span>{userName}</span>
+            </div>
+          </Dropdown>
+        )}
+      </div>
     </div>
   );
 };

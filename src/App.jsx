@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
+import React from "react";
+import { Route, Routes } from "react-router-dom";
 import Home from "./view/home";
-const App = () => {
+import Login from "./view/login";
 
+const App = () => {
 
   return (
     <>
       <Routes>
-        <Route
-          path={"/exeassui/home/*"}
-          element={
-            <Home />
-          }
-        ></Route>
+        <Route path="/login" element={<Login />} />
+        <Route path={"/exeassui/home/*"} element={<Home />} />
       </Routes>
     </>
   );

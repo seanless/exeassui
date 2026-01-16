@@ -18,6 +18,7 @@ const ExeassIndex = () => {
 
   const columns = [
     { title: "名称", dataIndex: "name" },
+    { title: "创建者", dataIndex: "creator_name" },
     { title: "维护项目", dataIndex: "item_names" },
     { title: "总时长", dataIndex: "total_hours" },
     { title: "服务时长", dataIndex: "total_service_hours" },

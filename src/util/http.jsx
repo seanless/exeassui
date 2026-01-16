@@ -61,6 +61,7 @@ let http = {
   /** post 请求
    * @param  {接口地址} url
    * @param  {请求参数} params
+   * @param  {customBase} 自定义base
    */
   post: function (url, params,customBase="apiHost") {
     params = params || {};
@@ -102,12 +103,12 @@ let http = {
 // 请求前拦截
 axios.interceptors.request.use(
   config => {
-    let token = localStorage.getItem("access_token");
-    if (token == undefined || token == null) {
-      token = "";
+    let authorization = localStorage.getItem("authorization");
+    if (authorization == undefined || authorization == null) {
+      authorization = "";
     }
 
-    config.headers['Authorization'] = token;
+    config.headers.Authorization = authorization;
 
     if (config.isLoading !== false) {
       // showLoading()
@@ -128,6 +129,23 @@ axios.interceptors.response.use(res => {
   if (res.config && res.config.isLoading !== false) {
     hideLoading()
   }
+  // 检查是否需要处理认证检查（登录接口跳过）
+
+  // 处理未登录或会话过期
+  if (res.data) {
+    // 未登录 (200) 或 会话过期 (201)
+    if (res.data.code === 200 || res.data.code === 201) {
+      // 清除本地存储的会话信息
+      localStorage.removeItem("Authorization");
+
+      // 显示提示并跳转到登录页
+      message.warning(res.data.msg || "登录已过期，请重新登录");
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 500);
+      return Promise.reject(res.data);
+    }
+  }
   return res
 },
   err => {
@@ -142,11 +160,6 @@ axios.interceptors.response.use(res => {
       message.warning('请求超时，请重试')
       return;
     }
-    // if (err.response && err.response.status === 401) {
-    //   message.error("登陆超时，请先登陆", 3);
-    //   window.location.href = '/datanetui/login';
-    //   return;
-    // }
 
     return Promise.reject(err);
   }
