@@ -1,0 +1,7 @@
+{
+  "SERVER_PORT":"8305",
+  "NODE_ENV": "development",
+  "apiHost":"http://localhost:8905",
+  "pageSize":10,
+  "version":"0.0.1"
+}

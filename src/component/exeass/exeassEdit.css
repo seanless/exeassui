@@ -1,0 +1,154 @@
+.custom-cascader-dropdown .ant-cascader-menu {
+  height: 500px;
+  /* 设置一个固定高度 */
+  max-height: 800px;
+  /* 或者设置最大高度 */
+}
+
+
+/* 父容器 */
+.plan-container {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  box-sizing: border-box;
+  margin-top: 10px;
+}
+
+/* 左右面板 */
+.panel {
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f7ff;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+/* 左 40%，右 60% */
+.left-panel {
+  width: 40%;
+}
+
+.right-panel {
+  width: 60%;
+}
+
+/* 标题 */
+.panel-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Form.Item 行容器 */
+.form-row {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+}
+
+/* 三等分 */
+.three-cols .form-item {
+  flex: 1 1 33.33%;
+}
+
+/* 四等分 */
+.four-cols .form-item {
+  flex: 1 1 25%;
+}
+
+/* Form.Item 通用样式（可选） */
+.form-item {
+  box-sizing: border-box;
+}
+
+.form-row .ant-form-item {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+
+/* StatsPanel.css */
+.stats-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f0f7ff;
+  border-radius: 8px;
+  margin-top: 10px;
+  padding: 12px 20px;
+  color: #333;
+  /* width:100%; */
+  /* 根据内容自适应宽度 */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 使用网格布局，确保上下行严格对齐 */
+.stats-grid {
+  display: grid;
+  /* 定义 7 列，每列宽度自适应，间距缩小 */
+  grid-template-columns: repeat(7, minmax(100px, auto));
+  column-gap: 24px;
+  row-gap: 8px;
+  align-items: start;
+}
+
+/* 汇总行样式 */
+.summary-row {
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+}
+
+/* 每一格的容器 */
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* 标签字体缩小 */
+.stat-label {
+  font-size: 14px;
+  color: #8c8c8c;
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+
+/* 数值样式 */
+.stat-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.unit {
+  font-size: 11px;
+  font-weight: normal;
+  margin-left: 2px;
+}
+
+/* 特殊颜色定义 */
+.text-blue {
+  color: #2f54eb;
+}
+
+.text-green {
+  color: #52c41a;
+}
+
+.text-large {
+  font-size: 18px;
+}
+
+/* 详情行（区域/TC）样式优化 */
+.detail-row {
+  display: contents;
+  /* 让子元素直接参与父级 grid 布局 */
+}
+
+.detail-row .stat-value {
+  font-size: 13px;
+  color: #595959;
+  font-weight: 500;
+}
+
+.detail-row .stat-label {
+  color: #bfbfbf;
+}

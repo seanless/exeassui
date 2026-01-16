@@ -1,0 +1,131 @@
+.layout {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f0fbfe;
+
+  .layout-header {
+    height: 46px;
+    line-height: 46px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #3dcd58;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-self: center;
+
+    .header_wrapper {
+      display: flex;
+      /* justify-content: space-between; */
+      height: 46px;
+      width: 100%;
+      padding: 0 20px 0 0;
+      flex-grow: 0;
+      flex-shrink: 0;
+
+      .header_logo_wrapper {
+        align-items: center;
+        color: currentColor;
+        display: inline-flex;
+        justify-content: center;
+        vertical-align: middle;
+        width: 240px;
+        background-color: #3dcd58;
+
+        /* padding: 0 16px; */
+        .header_logo_left {
+          /* background-size: 100% 100%; */
+          /* vertical-align: middle; */
+          width: 32px;
+          height: 32px;
+          margin-right: 16px;
+        }
+
+        .fe-logo-svg {
+          font-size: 16px;
+          color: #fff;
+          height: 34px;
+        }
+      }
+
+      .header_menus {
+        /* width: 100%; */
+        flex-grow: 1;
+        flex-shrink: 0;
+      }
+
+      .header_actions {
+        flex-grow: 0;
+        flex-shrink: 0;
+        padding-right: 20px;
+      }
+
+      .right_aligned_child {
+        margin-left: auto;
+        /* 这个属性会将子div推到最右边 */
+        margin-right: 20px;
+        /* 离右边距20px */
+      }
+    }
+  }
+
+  .layout-middle {
+    flex: 1;
+    display: flex;
+    height: 500px;
+
+    .layout-middle-sider {
+      width: 280px;
+      text-align: "center";
+      padding: 10px;
+      box-sizing: border-box;
+      height: 100%;
+      background-color: #fff;
+      box-shadow: 0 2px 6px #0003;
+      border-radius: 0px 5px 0 0;
+
+      img {
+        width: 100%;
+      }
+    }
+
+    .layout-middle-content {
+      width: 100%;
+      flex: 1;
+      height: auto;
+      overflow: auto;
+
+      /* display: flex; */
+      .page {
+        padding: 0px 20px 0 20px;
+
+        .page_header {
+          background-color: #fff;
+          padding: 20px;
+          box-shadow: 0 2px 6px #0003;
+          border-radius: 5px;
+          overflow: hidden;
+          margin-bottom: 20px;
+        }
+
+        .page_content {
+          box-shadow: 0 2px 6px #0003;
+          background-color: #fff;
+          border-radius: 5px;
+          overflow: hidden;
+
+          .ant-pagination {
+            padding-right: 20px;
+          }
+        }
+      }
+    }
+  }
+
+  .layout-footer {
+    height: 20px;
+    text-align: center;
+  }
+}

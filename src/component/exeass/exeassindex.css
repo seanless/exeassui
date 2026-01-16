@@ -1,0 +1,26 @@
+.four-column-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+
+}
+
+.four-column-item {
+  width: 24%;
+  display: flex;
+  flex-direction: column;
+  margin:"10px 10px"
+}
+
+.four-column-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.four-column-content {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding-left: 10px;
+  flex-grow: 1;
+   white-space: pre-line;
+}
