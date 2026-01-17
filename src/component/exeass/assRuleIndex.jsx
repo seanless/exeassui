@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Upload, Button, message, Form, Table } from 'antd';
+import { Upload, Button, message, Form, Table, Input } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from "react-router-dom";
 import http from "../../util/http";
@@ -13,6 +13,7 @@ const AssRuleIndex = () => {
   const [form] = Form.useForm();
   const [costsheetInfo, setCostsheetInfo] = useState({})
   const [records, setRecords] = useState([])
+  const [searchText, setSearchText] = useState('')
 
   const props = {
     name: 'file',
@@ -71,36 +72,49 @@ const AssRuleIndex = () => {
     });
   };
 
+  const filteredRecords = records.filter((r) => {
+    if (!searchText) return true;
+    return r.detail && r.detail.toString().toLowerCase().includes(searchText.toLowerCase());
+  });
+
   return (
     <div style={{ marginLeft: 20, marginRight: 20 }}>
       {contextHolder}
       <div className="pdf-header">
         <div style={{
           display: 'flex',
+          alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 20px', // 上下为0，左右为20px
           width: '100%',
-          paddingBottom:"20px"
+          paddingBottom: "20px"
         }}>
-          <Button onClick={() => { navigate("/exeassui/home/exeassindex") }}>返回项目</Button>
-          <Upload {...props} style={{marginRight:"20px"}}>
-            <Button icon={<UploadOutlined />}>初始化产线</Button>
-          </Upload>
-        </div>
-        <div style={{ flex: 1 }}>
+          <Form form={form} layout='inline' style={{ margin: 0 }}>
+            <Form.Item style={{ marginBottom: 0 }}>
+              <Input
+                placeholder="搜索需求描述"
+                allowClear
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ width: 300 }}
+              />
+            </Form.Item>
+          </Form>
 
-
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <Button onClick={() => { navigate("/exeassui/home/exeassindex") }}>返回项目</Button>
+            <Upload {...props}>
+              <Button icon={<UploadOutlined />}>初始化产线</Button>
+            </Upload>
+          </div>
         </div>
       </div>
-      <div>
-        <Form form={form} layout='inline'>
-        </Form>
-      </div>
+      
       <div className='four-column-container'>
         <Table
           key="tMain"
           columns={columns}
-          dataSource={records}
+          dataSource={filteredRecords}
           pagination={false}>
         </Table>
       </div>

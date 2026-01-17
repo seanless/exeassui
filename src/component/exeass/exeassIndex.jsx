@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Table, Button, message, Space, Popconfirm } from 'antd';
+import { Table, Button, message, Space, Popconfirm,Form ,Input } from 'antd';
 import { useNavigate, useLocation } from "react-router-dom";
 import http from "../../util/http";
 import ExeassEdit from './exeassEdit';
@@ -9,6 +9,7 @@ const config = require('Config')
 
 const ExeassIndex = () => {
   const navigate = useNavigate();
+  const [formRef] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
   const [editOpen, setEditOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -34,6 +35,7 @@ const ExeassIndex = () => {
           <div className="operation">
             <Space>
               <Button type="primary" size="small" onClick={() => { onDetail(record); }}>查看详情</Button>
+              <Button type="primary" size="small" onClick={() => { onEdit(record); }}>编辑</Button>
               <Popconfirm title={"确定删除" + record.name} onConfirm={() => onDelete(record)}>
                 <Button type="primary" danger size="small">删除</Button>
               </Popconfirm>
@@ -51,7 +53,7 @@ const ExeassIndex = () => {
   }, []);
 
   const onQuery = () => {
-    http.post("/api/assproject/query").then((result) => {
+    http.post("/api/assproject/query",formRef.getFieldsValue()).then((result) => {
       if (result.code != 0) {
         message.error(result.message);
         return;
@@ -63,7 +65,12 @@ const ExeassIndex = () => {
     navigate("/exeassui/home/assruleindex");
   }
 
-  const onEdit = () => {
+  const onUserManage = () => {
+    navigate("/exeassui/home/usermanage");
+  }
+
+  const onEdit = (pRecord) => {
+    setRecord(pRecord);
     setEditOpen(true);
   }
 
@@ -92,10 +99,30 @@ const ExeassIndex = () => {
         justifyContent: 'space-between',
         padding: '0 20px', // 上下为0，左右为20px
         width: '100%',
-        paddingBottom:"20px"
+        paddingBottom: "20px"
       }}>
-        <Button type='primary' onClick={onEdit}>新建项目</Button>
-        <Button style={{marginRight:"20px"}} onClick={onRule}>规则设置</Button>
+        <div className="divSerarch">
+          <Form layout="inline" form={formRef} onFinish={() => { onQuery(1) }}>
+            <Form.Item name="key" label="项目名称">
+              <Input placeholder="项目名称" />
+            </Form.Item>
+
+            <Form.Item>
+              <Button type="primary" onClick={() => { onQuery(1) }}>
+                搜索
+              </Button>
+            </Form.Item>
+            <Form.Item>
+              <Button type='primary' onClick={onEdit}>新建项目</Button>
+            </Form.Item>
+          </Form>
+        </div>
+
+        <div style={{ marginRight: "20px" }}>
+          <Button style={{ marginRight: 20 }} onClick={onUserManage}>用户管理</Button>
+          <Button onClick={onRule}>规则设置</Button>
+        </div>
+
       </div>
       <div style={{ width: "100%" }}>
         <Table
@@ -108,6 +135,7 @@ const ExeassIndex = () => {
       <ExeassEdit open={editOpen} onCancel={() => setEditOpen(false)} onOk={() => setEditOpen(false)} />
       <ExeassReport type={2}
         open={reportOpen}
+        record={record}
         onCancel={() => setReportOpen(false)}
         onOk={() => setReportOpen(false)}
         name={record.name}

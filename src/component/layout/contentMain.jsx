@@ -7,6 +7,7 @@ import { ConfigProvider } from 'antd';
 import AsyncComponent from '../../util/asyncComponent';
 const ExeassIndex = AsyncComponent(() => import(/* webpackChunkName: "exeassIndex" */ '../exeass/exeassIndex'));
 const AssRuleIndex = AsyncComponent(() => import(/* webpackChunkName: "assRuleIndex" */ '../exeass/assRuleIndex'));
+const UserManage = AsyncComponent(() => import(/* webpackChunkName: "userManage" */ '../exeass/userManage'));
 
 dayjs.locale('zh-cn');
 const ContentMain = () => {
@@ -14,6 +15,7 @@ const ContentMain = () => {
 		<ConfigProvider locale={zhCN}>
 			<Routes>
 				<Route path={'/exeassindex'} exact={true} element={<ExeassIndex />} />
+				<Route path={'/usermanage'} exact={true} element={<UserManage />} />
 				<Route path={'/assruleindex'} exact={true} element={<AssRuleIndex />} />
 			</Routes>
 		</ConfigProvider>

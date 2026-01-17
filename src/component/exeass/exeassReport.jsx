@@ -11,8 +11,13 @@ import ExeassReportSchedules from './exeassReportSchedules';
 
 const ExeassReport = ({ open, type, name, initSchedules, items, users, totals, config, onCancel, onOk }) => {
   useEffect(() => {
-    console.log("the config is:", config);
-  }, [])
+    if (open) {
+      console.log("the config is:", config);
+      console.log("the items is:", items);
+      console.log("the users is:", users);
+    }
+
+  }, [open])
 
 
   const [schedules, setSchedules] = useState(initSchedules);

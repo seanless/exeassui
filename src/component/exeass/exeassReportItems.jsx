@@ -7,8 +7,10 @@ const ExeassReportItems = ({ items }) => {
     { title: "项目名称", dataIndex: "rule", render: (value) => { return value ? value[2] : "" } },
     { title: "数量", dataIndex: "qty" },
     { title: "折扣", dataIndex: "discount" },
-    { title: "服务时长", dataIndex: "service_hours" },
-    { title: "报告时长", dataIndex: "report_hours" }
+    { title: "单项服务时长", dataIndex: "service_hours" },
+    { title: "单项报告时长", dataIndex: "report_hours" },
+    { title: "总服务时长", dataIndex: "total_service_hours" },
+    { title: "总报告时长", dataIndex: "total_report_hours" }
   ];
 
   return (

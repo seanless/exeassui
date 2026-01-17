@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Space, Dropdown, Avatar } from "antd";
-import { UserOutlined, LogoutOutlined } from "@ant-design/icons";
+import { Space, Dropdown, Avatar, Modal, Form, Input, message } from "antd";
+import { UserOutlined, LogoutOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import logoLeft from "../../asset/image/logo.un-IZiTG.png";
+import http from "../../util/http.jsx";
 
 const Header = () => {
   const [userName, setUserName] = useState(null);
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,7 +25,54 @@ const Header = () => {
     navigate("/login");
   };
 
+  const handleUpdatePassword = () => {
+    setPasswordModalVisible(true);
+  };
+
+  const handlePasswordModalCancel = () => {
+    setPasswordModalVisible(false);
+    form.resetFields();
+  };
+
+  const handlePasswordModalOk = async () => {
+    try {
+      const values = await form.validateFields();
+      const { old_password, new_password, confirm_password } = values;
+
+      // 验证两次新密码是否一致
+      if (new_password !== confirm_password) {
+        message.error("两次输入的新密码不一致");
+        return;
+      }
+
+      setLoading(true);
+      const res = await http.post("/api/user/updatepassword", {
+        old_password,
+        new_password
+      });
+
+      setLoading(false);
+
+      if (res.code === 0) {
+        message.success("密码修改成功");
+        setPasswordModalVisible(false);
+        form.resetFields();
+      } else {
+        message.error(res.msg || "密码修改失败");
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error("密码修改失败", error);
+    }
+  };
+
   const dropdownItems = [
+    {
+      key: "updatePassword",
+      label: "修改密码",
+      icon: <LockOutlined />,
+      onClick: handleUpdatePassword,
+    },
     {
       key: "logout",
       label: "注销",
@@ -83,6 +134,54 @@ const Header = () => {
           </Dropdown>
         )}
       </div>
+
+      <Modal
+        title="修改密码"
+        open={passwordModalVisible}
+        onOk={handlePasswordModalOk}
+        onCancel={handlePasswordModalCancel}
+        confirmLoading={loading}
+        okText="确认"
+        cancelText="取消"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="old_password"
+            label="旧密码"
+            rules={[{ required: true, message: "请输入旧密码" }]}
+          >
+            <Input.Password prefix={<LockOutlined />} placeholder="请输入旧密码" />
+          </Form.Item>
+          <Form.Item
+            name="new_password"
+            label="新密码"
+            rules={[
+              { required: true, message: "请输入新密码" },
+              { min: 6, message: "密码长度至少为6位" }
+            ]}
+          >
+            <Input.Password prefix={<LockOutlined />} placeholder="请输入新密码" />
+          </Form.Item>
+          <Form.Item
+            name="confirm_password"
+            label="确认新密码"
+            dependencies={["new_password"]}
+            rules={[
+              { required: true, message: "请再次输入新密码" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("new_password") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error("两次输入的密码不一致"));
+                }
+              })
+            ]}
+          >
+            <Input.Password prefix={<LockOutlined />} placeholder="请再次输入新密码" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

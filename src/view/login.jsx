@@ -12,7 +12,7 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await http.post("/api/auth/login", {
-        username: values.username,
+        user_name: values.user_name,
         password: values.password
       }, "apiHost", false);  // false 表示不自动处理登录跳转
       if (res.code === 0) {
@@ -58,7 +58,7 @@ const Login = () => {
           size="large"
         >
           <Form.Item
-            name="username"
+            name="user_name"
             rules={[{ required: true, message: "请输入用户名" }]}
           >
             <Input

@@ -6,7 +6,7 @@ import ExeassReport from './exeassReport';
 const { Text } = Typography;
 import "./exeassEdit.css"
 
-const ExeassEdit = ({ open, onCancel, onOk }) => {
+const ExeassEdit = ({ open, record, onCancel, onOk }) => {
   const [form] = Form.useForm();
   const [rawDataSource, setRawDataSource] = useState([]);
   const items = Form.useWatch('items', form) || [];
@@ -82,12 +82,15 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
   }, [rawDataSource]);
 
   const calcRuleHours = (record) => {
-    if (!record?.rule || !record?.qty) return { service_hours: 0, report_hours: 0 };
+    if (!record?.rule || !record?.qty||!record?.discount) {
+      return { service_hours: 0, report_hours: 0, total_service_hours: 0, total_report_hours: 0 };
+    }
     const detailValue = record.rule[record.rule.length - 1];
     const target = rawDataSource.find(i => i.detail === detailValue);
-    if (!target) return { service_hours: 0, report_hours: 0 };
-    const factor = record.qty * (record.discount ?? 1);
-    return { service_hours: target.service_hours * factor, report_hours: target.report_hours * factor };
+    if (!target) {
+      return { service_hours: 0, report_hours: 0 };
+    }
+    return { service_hours: target.service_hours, report_hours: target.report_hours, total_service_hours: target.service_hours * record.qty * record.discount, total_report_hours: target.report_hours * record.qty * record.discount };
   };
 
   const calcUserMetrics = (record) => {
@@ -130,9 +133,9 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
 
   const totals = useMemo(() => {
     const ruleTotals = items.reduce((acc, cur) => {
-      const { service_hours, report_hours } = calcRuleHours(cur);
-      return { service_hours: acc.service_hours + service_hours, report_hours: acc.report_hours + report_hours };
-    }, { service_hours: 0, report_hours: 0 });
+      const {total_service_hours,total_report_hours } = calcRuleHours(cur);
+      return { all_service_hours: acc.all_service_hours + total_service_hours, all_report_hours: acc.all_report_hours + total_report_hours };
+    }, { all_service_hours: 0, all_report_hours: 0 });
 
     const userTotals = users.reduce((acc, cur) => {
       const userMetrics = calcUserMetrics(cur);
@@ -159,12 +162,12 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
     }, structuredClone(user_metric_default));
 
 
-    let total_other_hours = other_hours * (userTotals.region_local_user_count + userTotals.region_remote_user_count + userTotals.tc_local_user_count + userTotals.tc_remote_user_count);
+    let all_other_hours = other_hours * (userTotals.region_local_user_count + userTotals.region_remote_user_count + userTotals.tc_local_user_count + userTotals.tc_remote_user_count);
     return {
       ...ruleTotals,
       ...userTotals,
-      total_other_hours: total_other_hours,
-      total_wait_hours: (ruleTotals.service_hours + userTotals.region_local_transport_hours + userTotals.region_remote_transport_hours + userTotals.tc_local_transport_hours + userTotals.tc_remote_transport_hours + ruleTotals.report_hours + total_other_hours) / 19
+      all_other_hours: all_other_hours,
+      all_wait_hours: (ruleTotals.all_service_hours + userTotals.region_local_transport_hours + userTotals.region_remote_transport_hours + userTotals.tc_local_transport_hours + userTotals.tc_remote_transport_hours + ruleTotals.all_report_hours + all_other_hours) / 19
     };
   }, [items, users, rawDataSource, other_hours]);
 
@@ -185,6 +188,8 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
         discount: values.discount || 1,
         service_hours: values.service_hours || 0,
         report_hours: values.report_hours || 0,
+        total_service_hours: (values.service_hours || 0)*values.discount*values.qty,
+        total_report_hours: (values.report_hours || 0)*values.discount*values.qty,
         rule: [
           values.activity_code,
           values.family_note,
@@ -207,6 +212,11 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
     });
   }
 
+  const onRuleCascaderFilter=(inputValue, path) =>{
+    path.some(option => option.label.toLowerCase().includes(inputValue.toLowerCase()));
+  }
+  
+
   return (
     <Drawer open={open} onClose={onCancel} size={1224} title="新建项目">
       <Form form={form} layout="vertical"
@@ -222,13 +232,14 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
               if (!item.rule) {
                 return;
               }
-              const detailValue = item.rule[item.rule.length - 1];
-              const target = rawDataSource.find(i => i.detail === detailValue);
-              if (item.service_hours !== target.service_hours || item.report_hours !== target.report_hours) {
+              const tmpData=calcRuleHours(item);
+              if (item.qty !== tmpData.qty || item.discount !== tmpData.discount) {
                 newItems[index] = {
                   ...item,
-                  service_hours: target.service_hours,
-                  report_hours: target.report_hours
+                  service_hours: tmpData.service_hours,
+                  report_hours: tmpData.report_hours,
+                  total_service_hours: tmpData.total_service_hours,
+                  total_report_hours: tmpData.total_report_hours,
                 };
                 needsUpdate = true;
               }
@@ -248,15 +259,21 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
               }
 
               const userMetrics = calcUserMetrics(user);
-              if (userMetrics.user_type !== user.user_type
+              const shouldClearRemoteFields = user.traffic_type === 'local' && (user.remote_far_traffic_hours !== undefined || user.remote_traffic_fee !== undefined);
+              const shouldUpdateMetrics = userMetrics.user_type !== user.user_type
                 || user.traffic_type !== userMetrics.traffic_type
                 || user.user_count !== userMetrics.user_count
                 || user.days !== userMetrics.days
-                || user.remote_far_traffic_hours !== userMetrics.remote_far_traffic_hours) {
+                || user.remote_far_traffic_hours !== userMetrics.remote_far_traffic_hours
+                || user.remote_traffic_fee !== userMetrics.remote_traffic_fee;
+
+              if (shouldClearRemoteFields || shouldUpdateMetrics) {
                 newUsers[index] = {
                   ...user,
-                  transport_hours: (userMetrics.region_local_transport_hours + userMetrics.region_remote_transport_hours + userMetrics.tc_local_transport_hours + userMetrics.tc_remote_transport_hours).toFixed(2),
-                  transport_fee: (userMetrics.region_local_transport_fee + userMetrics.region_remote_transport_fee + userMetrics.tc_local_transport_fee + userMetrics.tc_remote_transport_fee).toFixed(2)
+                  ...(user.traffic_type === 'local' ? { remote_far_traffic_hours: 0, remote_traffic_fee: 0 } : {}),
+                  ...userMetrics,
+                  total_transport_hours: (userMetrics.region_local_transport_hours + userMetrics.region_remote_transport_hours + userMetrics.tc_local_transport_hours + userMetrics.tc_remote_transport_hours).toFixed(2),
+                  total_transport_fee: (userMetrics.region_local_transport_fee + userMetrics.region_remote_transport_fee + userMetrics.tc_local_transport_fee + userMetrics.tc_remote_transport_fee).toFixed(2)
                 };
                 needsUpdate = true;
               }
@@ -286,17 +303,19 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
                 return (
                   <div key={key} style={{ background: '#f9f9f9', padding: 5, borderRadius: 8 }}>
                     <Space align="start" size="large" wrap>
-                        <Form.Item
-                          {...restField}
-                          label="服务规则 (activity/family/detail)"
-                          name={[name, 'rule']}
-                          rules={[{ required: true, message: '必选' }]}
-                        >
-                          <Cascader options={treeData}
-                            style={{ width: 600 }}
-                            dropdownClassName="custom-cascader-dropdown"
-                            placeholder="请选择规则" />
-                        </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        label="标准工时 (activity/family/detail)"
+                        name={[name, 'rule']}
+                        rules={[{ required: true, message: '必选' }]}
+                      >
+                        <Cascader options={treeData}
+                          style={{ width: 600 }}
+                          dropdownClassName="custom-cascader-dropdown"
+                          placeholder="请选择规则" 
+                          showSearch={{ onRuleCascaderFilter, onSearch: value => console.log(value) }}
+                        />
+                      </Form.Item>
                       {/* )} */}
 
                       <Form.Item {...restField} label="数量" name={[name, 'qty']} rules={[{ required: true }]} initialValue={1}>
@@ -309,12 +328,14 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
                       <span style={{ display: 'none' }}>
                         <Form.Item name={[name, 'service_hours']} hidden><InputNumber /></Form.Item>
                         <Form.Item name={[name, 'report_hours']} hidden><InputNumber /></Form.Item>
+                        <Form.Item name={[name, 'total_service_hours']} hidden><InputNumber /></Form.Item>
+                        <Form.Item name={[name, 'total_report_hours']} hidden><InputNumber /></Form.Item>
                       </span>
 
                       <div style={{ paddingTop: 30 }}>
                         <Space size="middle">
-                          <Text type="secondary">服务时长: <b style={{ color: '#1890ff' }}>{rowHours.service_hours.toFixed(2)}</b></Text>
-                          <Text type="secondary">报告时长: <b style={{ color: '#52c41a' }}>{rowHours.report_hours.toFixed(2)}</b></Text>
+                          <Text type="secondary">服务时长: <b style={{ color: '#1890ff' }}>{rowHours.total_service_hours.toFixed(2)}</b></Text>
+                          <Text type="secondary">报告时长: <b style={{ color: '#52c41a' }}>{rowHours.total_report_hours.toFixed(2)}</b></Text>
                           <Button
                             type="text"
                             danger
@@ -340,33 +361,34 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
             {/* 第一行：汇总数据 */}
             <div className="stat-item">
               <div className="stat-label">所有工时</div>
-              <div className="stat-value text-blue text-large">{(totals.service_hours +
+              <div className="stat-value text-blue text-large">{(totals.all_service_hours +
                 totals.region_local_transport_hours +
                 totals.region_remote_transport_hours +
                 totals.tc_local_transport_hours +
                 totals.tc_remote_transport_hours +
-                totals.report_hours +
-                totals.total_wait_hours + totals.total_other_hours).toFixed(1)}<span className="unit">h</span></div>
+                totals.all_report_hours +
+                totals.all_wait_hours + totals.all_other_hours).toFixed(1)}<span className="unit">h</span></div>
             </div>
             <div className="stat-item">
               <div className="stat-label">总服务时长</div>
-              <div className="stat-value text-blue">{totals.service_hours}<span className="unit">h</span></div>
+              <div className="stat-value text-blue">{totals.all_service_hours.toFixed(1)}<span className="unit">h</span></div>
             </div>
             <div className="stat-item">
+
               <div className="stat-label">交通总用时</div>
               <div className="stat-value">{(totals.region_local_transport_hours + totals.region_remote_transport_hours + totals.tc_local_transport_hours + totals.tc_remote_transport_hours).toFixed(1)}<span className="unit">h</span></div>
             </div>
             <div className="stat-item">
               <div className="stat-label">等待总工时</div>
-              <div className="stat-value">{totals.total_wait_hours.toFixed(1)}<span className="unit">h</span></div>
+              <div className="stat-value">{totals.all_wait_hours.toFixed(1)}<span className="unit">h</span></div>
             </div>
             <div className="stat-item">
               <div className="stat-label">总报告时长</div>
-              <div className="stat-value text-green">{totals.report_hours.toFixed(1)}<span className="unit">h</span></div>
+              <div className="stat-value text-green">{totals.all_report_hours.toFixed(1)}<span className="unit">h</span></div>
             </div>
             <div className="stat-item">
               <div className="stat-label">总Others</div>
-              <div className="stat-value">{totals.total_other_hours.toFixed(1)}<span className="unit">h</span></div>
+              <div className="stat-value">{totals.all_other_hours.toFixed(1)}<span className="unit">h</span></div>
             </div>
             <div className="stat-item">
               <div className="stat-label">差旅总费用</div>
@@ -381,7 +403,7 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
               <div className="stat-item"></div> {/* 第一列留空对齐 */}
               <div className="stat-item">
                 <div className="stat-label">区域成员服务时长</div>
-                <div className="stat-value">{(totals.service_hours - tc_service_hours).toFixed(1)}<span className="unit">h</span></div>
+                <div className="stat-value">{(totals.all_service_hours - (tc_service_hours||0)).toFixed(1)}<span className="unit">h</span></div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">区域成员交通用时</div>
@@ -389,7 +411,7 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
               </div>
               <div className="stat-item">
                 <div className="stat-label">区域成员等待用时</div>
-                <div className="stat-value">{(totals.total_wait_hours - tc_wait_hours).toFixed(1)}<span className="unit">h</span></div>
+                <div className="stat-value">{(totals.all_wait_hours - tc_wait_hours).toFixed(1)}<span className="unit">h</span></div>
               </div>
               <div className="stat-item" style={{ gridColumn: 'span 2' }}></div> {/* 跨过报告和Others列 */}
               <div className="stat-item">
@@ -471,6 +493,7 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
               <>
                 {fields.map(({ key, name, ...restField }) => {
                   const userMetrics = calcUserMetrics(users[name]);
+                  const isLocalTraffic = users[name]?.traffic_type === 'local';
                   return (
                     <Space key={key} align="start" style={{ display: 'flex', marginBottom: 8, borderBottom: '1px solid #eee', paddingBottom: 8 }}>
                       <Form.Item {...restField} name={[name, 'user_type']} label="人员类型" initialValue="region" rules={[{ required: true, message: '必填' }]}>
@@ -491,8 +514,8 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
                       <Form.Item {...restField} name={[name, 'days']} label="天数" initialValue={1} rules={[{ required: true, type: 'integer' }]}>
                         <InputNumber min={1} precision={0} />
                       </Form.Item>
-                      <Form.Item label="异地大交通时长" name={[name, 'remote_far_traffic_hours']} initialValue={8}>
-                        <Select style={{ width: 100 }} >
+                      <Form.Item {...restField} label="单程交通时长" name={[name, 'remote_far_traffic_hours']} initialValue={0}>
+                        <Select style={{ width: 100 }} disabled={isLocalTraffic}>
                           <Option value={4}>4</Option>
                           <Option value={5}>5</Option>
                           <Option value={6}>6</Option>
@@ -500,12 +523,17 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
                           <Option value={8}>8</Option>
                         </Select>
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'remote_traffic_fee']} label="异地交通费" initialValue={0} rules={[{ required: true, type: 'integer' }]}>
-                        <InputNumber min={0} precision={0} />
+                      <Form.Item {...restField} name={[name, 'remote_traffic_fee']} label="单程大交通费" initialValue={0} rules={[{ required: true, type: 'integer' }]}>
+                        <Select style={{ width: 100 }} disabled={isLocalTraffic}>
+                          <Option value={200}>200</Option>
+                          <Option value={400}>400</Option>
+                          <Option value={800}>800</Option>
+                          <Option value={1200}>1200</Option>
+                        </Select>
                       </Form.Item>
                       <span style={{ display: 'none' }}>
-                        <Form.Item name={[name, 'transport_hours']} hidden><InputNumber /></Form.Item>
-                        <Form.Item name={[name, 'transport_fee']} hidden><InputNumber /></Form.Item>
+                        <Form.Item name={[name, 'total_transport_hours']} hidden><InputNumber /></Form.Item>
+                        <Form.Item name={[name, 'total_transport_fee']} hidden><InputNumber /></Form.Item>
                       </span>
                       <div style={{ marginTop: 32, minWidth: 280 }}>
                         <Space size="middle">
@@ -535,7 +563,7 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
         items={items}
         users={users}
         totals={totals}
-        config={{ local_traffic_hours: local_traffic_hours, remote_close_traffic_hours: remote_close_traffic_hours, local_sr_price: local_sr_price, remote_sr_price: remote_sr_price }}
+        config={{tc_service_hours: tc_service_hours||0, tc_wait_hours: tc_wait_hours||0, local_traffic_hours: local_traffic_hours||0, remote_close_traffic_hours: remote_close_traffic_hours||0, local_sr_price: local_sr_price||400, remote_sr_price: remote_sr_price||800 }}
         onCancel={() => { setReportOpen(false) }}
         onOk={() => { setReportOpen(false) }} />
 

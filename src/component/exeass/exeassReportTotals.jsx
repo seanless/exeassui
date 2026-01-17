@@ -21,17 +21,17 @@ const ExeassReportTotals = ({ totals,config }) => {
         {/* 第一行：汇总数据 */}
         <div className="stat-item">
           <div className="stat-label">所有工时</div>
-          <div className="stat-value text-blue text-large">{(totals.service_hours +
+          <div className="stat-value text-blue text-large">{(totals.all_service_hours +
             totals.region_local_transport_hours +
             totals.region_remote_transport_hours +
             totals.tc_local_transport_hours +
             totals.tc_remote_transport_hours +
-            totals.report_hours +
-            totals.total_wait_hours + totals.total_other_hours).toFixed(1)}<span className="unit">h</span></div>
+            totals.all_report_hours +
+            totals.all_wait_hours + totals.all_other_hours).toFixed(1)}<span className="unit">h</span></div>
         </div>
         <div className="stat-item">
           <div className="stat-label">总服务时长</div>
-          <div className="stat-value text-blue">{totals.service_hours}<span className="unit">h</span></div>
+          <div className="stat-value text-blue">{totals.all_service_hours}<span className="unit">h</span></div>
         </div>
         <div className="stat-item">
           <div className="stat-label">交通总用时</div>
@@ -39,15 +39,15 @@ const ExeassReportTotals = ({ totals,config }) => {
         </div>
         <div className="stat-item">
           <div className="stat-label">等待总工时</div>
-          <div className="stat-value">{totals.total_wait_hours.toFixed(1)}<span className="unit">h</span></div>
+          <div className="stat-value">{totals.all_wait_hours.toFixed(1)}<span className="unit">h</span></div>
         </div>
         <div className="stat-item">
           <div className="stat-label">总报告时长</div>
-          <div className="stat-value text-green">{totals.report_hours.toFixed(1)}<span className="unit">h</span></div>
+          <div className="stat-value text-green">{totals.all_report_hours.toFixed(1)}<span className="unit">h</span></div>
         </div>
         <div className="stat-item">
           <div className="stat-label">总Others</div>
-          <div className="stat-value">{totals.total_other_hours.toFixed(1)}<span className="unit">h</span></div>
+          <div className="stat-value">{totals.all_other_hours.toFixed(1)}<span className="unit">h</span></div>
         </div>
         <div className="stat-item">
           <div className="stat-label">差旅总费用</div>
@@ -62,7 +62,7 @@ const ExeassReportTotals = ({ totals,config }) => {
           <div className="stat-item"></div> {/* 第一列留空对齐 */}
           <div className="stat-item">
             <div className="stat-label">区域成员服务时长</div>
-            <div className="stat-value">{(totals.service_hours - config.tc_service_hours).toFixed(1)}<span className="unit">h</span></div>
+            <div className="stat-value">{(totals.all_service_hours - config.tc_service_hours).toFixed(1)}<span className="unit">h</span></div>
           </div>
           <div className="stat-item">
             <div className="stat-label">区域成员交通用时</div>
@@ -70,7 +70,7 @@ const ExeassReportTotals = ({ totals,config }) => {
           </div>
           <div className="stat-item">
             <div className="stat-label">区域成员等待用时</div>
-            <div className="stat-value">{(totals.total_wait_hours - config.tc_wait_hours).toFixed(1)}<span className="unit">h</span></div>
+            <div className="stat-value">{(totals.all_wait_hours - config.tc_wait_hours).toFixed(1)}<span className="unit">h</span></div>
           </div>
           <div className="stat-item" style={{ gridColumn: 'span 2' }}></div> {/* 跨过报告和Others列 */}
           <div className="stat-item">
