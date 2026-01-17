@@ -18,7 +18,6 @@ const ExeassIndex = () => {
 
   const columns = [
     { title: "名称", dataIndex: "name" },
-    { title: "创建者", dataIndex: "creator_name" },
     { title: "维护项目", dataIndex: "item_names" },
     { title: "总时长", dataIndex: "total_hours" },
     { title: "服务时长", dataIndex: "total_service_hours" },
@@ -27,6 +26,7 @@ const ExeassIndex = () => {
     { title: "等待时长", dataIndex: "total_wait_hours", },
     { title: "Other时长", dataIndex: "total_other_hours", },
     { title: "差旅费用", dataIndex: "total_transport_fee" },
+    { title: "创建者", dataIndex: "creator_name" },
     { title: "创建时间", dataIndex: "create_time" },
     {
       title: "操作", key: "operation", render: (text, record) => {

@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { Form, InputNumber, Cascader, Button, Space, Input, Select, Card, Row, Col, Typography, message, Drawer } from 'antd';
+import { Form, InputNumber, Cascader, Button, Space, Input, Select, Card, Row, Col, Typography, message, Drawer, Modal } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import http from "../../util/http";
 import ExeassReport from './exeassReport';
@@ -24,6 +24,8 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
   const users = Form.useWatch('users', form) || [];
 
   const [reportOpen, setReportOpen] = useState(false);
+  const [customModalOpen, setCustomModalOpen] = useState(false);
+  const [customForm] = Form.useForm();
 
   const user_metric_default = {
     region_local_user_count: 0,
@@ -170,6 +172,41 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
     setReportOpen(true);
   }
 
+  const onCustomModalOpen = () => {
+    customForm.resetFields();
+    setCustomModalOpen(true);
+  }
+
+  const onCustomModalOk = () => {
+    customForm.validateFields().then((values) => {
+      const currentItems = form.getFieldValue('items') || [];
+      const newItem = {
+        qty: values.qty || 1,
+        discount: values.discount || 1,
+        service_hours: values.service_hours || 0,
+        report_hours: values.report_hours || 0,
+        rule: [
+          values.activity_code,
+          values.family_note,
+          values.detail,
+        ]
+      };
+      form.setFieldsValue({ items: [...currentItems, newItem] });
+      setCustomModalOpen(false);
+      let tmpRules = [...rawDataSource, {
+        activity_code: values.activity_code,
+        family_note: values.family_note,
+        detail: values.detail,
+        service_hours: values.service_hours || 0,
+        report_hours: values.report_hours || 0,
+      }]
+      setRawDataSource(tmpRules);
+      message.success('已添加自定义条目');
+    }).catch((err) => {
+      console.error('Validation failed:', err);
+    });
+  }
+
   return (
     <Drawer open={open} onClose={onCancel} size={1224} title="新建项目">
       <Form form={form} layout="vertical"
@@ -231,28 +268,36 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
           }
         }}
       >
-        <Form.Item name="name" label="项目名称" rules={[{ required: true }]}>
-          <Input placeholder="请输入项目名称" />
+        <Form.Item label="项目名称" rules={[{ required: true }]}>
+          <Space.Compact style={{ width: '100%' }}>
+            <Form.Item name="name" noStyle rules={[{ required: true }]}>
+              <Input placeholder="请输入项目名称" style={{ width: 'calc(100% - 100px)' }} />
+            </Form.Item>
+            <Button type="primary" onClick={onCustomModalOpen}>自定义</Button>
+          </Space.Compact>
         </Form.Item>
         <Form.List name="items" initialValue={[{}]}>
           {(fields, { add, remove }) => (
             <>
               {fields.map(({ key, name, ...restField }) => {
-                const rowHours = calcRuleHours(items?.[name]);
+                const item = items?.[name];
+                const rowHours = calcRuleHours(item);
+
                 return (
                   <div key={key} style={{ background: '#f9f9f9', padding: 5, borderRadius: 8 }}>
                     <Space align="start" size="large" wrap>
-                      <Form.Item
-                        {...restField}
-                        label="服务规则 (activity/family/detail)"
-                        name={[name, 'rule']}
-                        rules={[{ required: true, message: '必选' }]}
-                      >
-                        <Cascader options={treeData}
-                          style={{ width: 600 }}
-                          dropdownClassName="custom-cascader-dropdown"
-                          placeholder="请选择规则" />
-                      </Form.Item>
+                        <Form.Item
+                          {...restField}
+                          label="服务规则 (activity/family/detail)"
+                          name={[name, 'rule']}
+                          rules={[{ required: true, message: '必选' }]}
+                        >
+                          <Cascader options={treeData}
+                            style={{ width: 600 }}
+                            dropdownClassName="custom-cascader-dropdown"
+                            placeholder="请选择规则" />
+                        </Form.Item>
+                      {/* )} */}
 
                       <Form.Item {...restField} label="数量" name={[name, 'qty']} rules={[{ required: true }]} initialValue={1}>
                         <InputNumber min={1} placeholder="Qty" />
@@ -464,8 +509,8 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
                       </span>
                       <div style={{ marginTop: 32, minWidth: 280 }}>
                         <Space size="middle">
-                          <Text type="secondary">交通用时: <b style={{ color: '#fa8c16' }}>{(userMetrics.region_local_transport_hours + userMetrics.region_remote_transport_hours + userMetrics.tc_local_transport_hours + userMetrics.tc_remote_transport_hours).toFixed(2)}h</b></Text>
-                          <Text type="secondary">差旅费用: <b style={{ color: '#eb2f96' }}>¥{(userMetrics.region_local_transport_fee + userMetrics.region_remote_transport_fee + userMetrics.tc_local_transport_fee + userMetrics.tc_remote_transport_fee).toFixed(2)}</b></Text>
+                          <Text type="secondary">交通用时: <b style={{ color: '#fa8c16' }}>{(userMetrics.region_local_transport_hours + userMetrics.region_remote_transport_hours + userMetrics.tc_local_transport_hours + userMetrics.tc_remote_transport_hours).toFixed(1)}h</b></Text>
+                          <Text type="secondary">差旅费用: <b style={{ color: '#eb2f96' }}>¥{(userMetrics.region_local_transport_fee + userMetrics.region_remote_transport_fee + userMetrics.tc_local_transport_fee + userMetrics.tc_remote_transport_fee).toFixed(1)}</b></Text>
                         </Space>
                       </div>
                       <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)} style={{ marginTop: 30 }} />
@@ -493,6 +538,40 @@ const ExeassEdit = ({ open, onCancel, onOk }) => {
         config={{ local_traffic_hours: local_traffic_hours, remote_close_traffic_hours: remote_close_traffic_hours, local_sr_price: local_sr_price, remote_sr_price: remote_sr_price }}
         onCancel={() => { setReportOpen(false) }}
         onOk={() => { setReportOpen(false) }} />
+
+      {/* 自定义条目 Modal */}
+      <Modal
+        title="添加自定义条目"
+        open={customModalOpen}
+        onOk={onCustomModalOk}
+        onCancel={() => setCustomModalOpen(false)}
+        okText="确认"
+        cancelText="取消"
+      >
+        <Form form={customForm} layout="vertical">
+          <Form.Item name="activity_code" label="Activity Code" rules={[{ required: true, message: '请输入 Activity Code' }]}>
+            <Input placeholder="请输入 Activity Code" />
+          </Form.Item>
+          <Form.Item name="family_note" label="Family Note" rules={[{ required: true, message: '请输入 Family Note' }]}>
+            <Input placeholder="请输入 Family Note" />
+          </Form.Item>
+          <Form.Item name="detail" label="Detail" rules={[{ required: true, message: '请输入 Detail' }]}>
+            <Input placeholder="请输入 Detail" />
+          </Form.Item>
+          <Form.Item name="service_hours" label="Service Hours" rules={[{ required: true, message: '请输入 Service Hours' }]}>
+            <InputNumber min={0} step={0.1} placeholder="服务时长" style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="report_hours" label="Report Hours" rules={[{ required: true, message: '请输入 Report Hours' }]}>
+            <InputNumber min={0} step={0.1} placeholder="报告时长" style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="qty" label="数量" initialValue={1} rules={[{ required: true }]}>
+            <InputNumber min={1} placeholder="数量" style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="discount" label="折扣" initialValue={1}>
+            <InputNumber min={0} max={1} step={0.1} placeholder="折扣" style={{ width: '100%' }} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Drawer>
   );
 };
