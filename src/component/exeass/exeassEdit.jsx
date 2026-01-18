@@ -300,7 +300,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
               if (shouldClearRemoteFields || shouldUpdateMetrics) {
                 newUsers[index] = {
                   ...user,
-                  ...(user.traffic_type === 'local' ? { remote_far_traffic_hours: 0, remote_traffic_fee: 0 } : {}),
+                  ...(user.traffic_type === 'local' ? { remote_far_traffic_hours: 0, remote_traffic_fee: 0 } : {remote_far_traffic_hours:user.remote_far_traffic_hours&&user.remote_far_traffic_hours>0?user.remote_far_traffic_hours:4,remote_traffic_fee:user.remote_traffic_fee&&user.remote_traffic_fee>0?user.remote_traffic_fee:200}),
                   ...userMetrics,
                   total_transport_hours: (userMetrics.region_local_transport_hours + userMetrics.region_remote_transport_hours + userMetrics.tc_local_transport_hours + userMetrics.tc_remote_transport_hours).toFixed(2),
                   total_transport_fee: (userMetrics.region_local_transport_fee + userMetrics.region_remote_transport_fee + userMetrics.tc_local_transport_fee + userMetrics.tc_remote_transport_fee).toFixed(2)
@@ -589,7 +589,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
       <ExeassReport
         type={type}
         open={reportOpen}
-        id={record.id||0}
+        id={record?.id||0}
         name={name}
         items={items}
         users={users}

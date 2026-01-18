@@ -39,7 +39,7 @@ const ExeassReport = ({ open, type,id, name, initSchedules, items, users, totals
     {
       key: '3',
       label: '人员',
-      children: <ExeassReportUsers users={users} />,
+      children: <ExeassReportUsers users={users} config={config}/>,
     }, {
       key: '4',
       label: '统计信息',

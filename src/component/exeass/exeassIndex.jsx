@@ -125,7 +125,7 @@ const ExeassIndex = () => {
 
         <div style={{ marginRight: "20px" }}>
           <Button style={{ marginRight: 20 }} onClick={onUserManage}>用户管理</Button>
-          <Button onClick={onRule}>规则设置</Button>
+          <Button onClick={onRule}>标准工时</Button>
         </div>
 
       </div>
@@ -143,12 +143,12 @@ const ExeassIndex = () => {
         record={record}
         onCancel={() => setReportOpen(false)}
         onOk={() => setReportOpen(false)}
-        name={record.name}
-        items={record.items}
-        users={record.users}
-        totals={record.totals}
-        config={record.config}
-        initSchedules={record.schedules}
+        name={record?.name}
+        items={record?.items}
+        users={record?.users}
+        totals={record?.totals}
+        config={record?.config}
+        initSchedules={record?.schedules}
       />
     </div>
   );
