@@ -95,10 +95,12 @@ const ExeassReport = ({ open, type,id, name, initSchedules, items, users, totals
           '交通类型': item.traffic_type === "local" ? "本地" : "异地",
           '人员数量': item.user_count,
           '天数': item.days,
-          '异地大交通时长': item.remote_far_traffic_hours,
-          '异地交通费': item.remote_traffic_fee,
-          '交通时长': item.transport_hours,
-          '差旅费用': item.transport_fee
+          '单程交通时长': item.remote_far_traffic_hours,
+          '单程大交通费': item.remote_traffic_fee,
+          '本地交通时长': item.user_count * item.days * (item.traffic_type == "local" ? (config?.local_traffic_hours || 0) : (config?.remote_close_traffic_hours || 0)),
+          '异地交通时长': item.traffic_type == "local" ? 0 : item.user_count * 2 * item.remote_far_traffic_hours,
+          '交通总时长': item.total_transport_hours,
+          '差旅费用': item.total_transport_fee
         }));
         const ws = XLSX.utils.json_to_sheet(sheetData);
         XLSX.utils.book_append_sheet(wb, ws, '人员');
