@@ -106,37 +106,53 @@ const ExeassReport = ({ open, type,id, name, initSchedules, items, users, totals
         XLSX.utils.book_append_sheet(wb, ws, '人员');
       }
 
-      // 4. 统计信息
+      // 4. 统计信息 - 按网页grid布局样式填充
       if (totals && config) {
-        const sheetData = [
-          // 汇总数据
-          { '统计项': '所有工时', '数值': ((totals.all_service_hours +
+        // 第一行：汇总数据
+        const headerRow = ['', '', '所有工时', '总服务时长', '交通总用时', '等待总工时', '总报告时长', '总Others', '差旅总费用'];
+        const summaryRow = ['', '',
+          ((totals.all_service_hours +
             totals.region_local_transport_hours +
             totals.region_remote_transport_hours +
             totals.tc_local_transport_hours +
             totals.tc_remote_transport_hours +
             totals.all_report_hours +
-            totals.all_wait_hours + totals.all_other_hours).toFixed(1)) + 'h' },
-          { '统计项': '总服务时长', '数值': totals.all_service_hours + 'h' },
-          { '统计项': '交通总用时', '数值': ((totals.region_local_transport_hours + totals.region_remote_transport_hours + totals.tc_local_transport_hours + totals.tc_remote_transport_hours).toFixed(1)) + 'h' },
-          { '统计项': '等待总工时', '数值': totals.all_wait_hours.toFixed(1) + 'h' },
-          { '统计项': '总报告时长', '数值': totals.all_report_hours.toFixed(1) + 'h' },
-          { '统计项': '总Others', '数值': totals.all_other_hours.toFixed(1) + 'h' },
-          { '统计项': '差旅总费用', '数值': ((totals.region_local_transport_fee + totals.region_remote_transport_fee + totals.tc_local_transport_fee + totals.tc_remote_transport_fee).toFixed(1)) + '元' },
-          {},
-          // 区域成员数据
-          { '统计项': '区域成员服务时长', '数值': ((totals.all_service_hours - (config.tc_service_hours || 0)).toFixed(1)) + 'h' },
-          { '统计项': '区域成员交通用时', '数值': ((totals.region_local_transport_hours + totals.region_remote_transport_hours).toFixed(1)) + 'h' },
-          { '统计项': '区域成员等待用时', '数值': ((totals.all_wait_hours - (config.tc_wait_hours || 0)).toFixed(1)) + 'h' },
-          { '统计项': '区域成员差旅费用', '数值': ((totals.region_local_transport_fee + totals.region_remote_transport_fee).toFixed(1)) + '元' },
-          {},
-          // TC成员数据
-          { '统计项': 'TC成员服务时长', '数值': (config.tc_service_hours || 0) + 'h' },
-          { '统计项': 'TC成员交通用时', '数值': ((totals.tc_local_transport_hours + totals.tc_remote_transport_hours).toFixed(1)) + 'h' },
-          { '统计项': 'TC成员等待用时', '数值': (config.tc_wait_hours || 0) + 'h' },
-          { '统计项': 'TC成员差旅费用', '数值': ((totals.tc_local_transport_fee + totals.tc_remote_transport_fee).toFixed(1)) + '元' },
+            totals.all_wait_hours + totals.all_other_hours).toFixed(1)) + 'h',
+          totals.all_service_hours + 'h',
+          ((totals.region_local_transport_hours + totals.region_remote_transport_hours + totals.tc_local_transport_hours + totals.tc_remote_transport_hours).toFixed(1)) + 'h',
+          totals.all_wait_hours.toFixed(1) + 'h',
+          totals.all_report_hours.toFixed(1) + 'h',
+          totals.all_other_hours.toFixed(1) + 'h',
+          ((totals.region_local_transport_fee + totals.region_remote_transport_fee + totals.tc_local_transport_fee + totals.tc_remote_transport_fee).toFixed(1)) + '元'
         ];
-        const ws = XLSX.utils.json_to_sheet(sheetData);
+
+        // 第二行：区域成员数据
+        const regionRow = ['', '',
+          '区域成员服务时长: ' + ((totals.all_service_hours - (config.tc_service_hours || 0)).toFixed(1)) + 'h',
+          '区域成员交通用时: ' + ((totals.region_local_transport_hours + totals.region_remote_transport_hours).toFixed(1)) + 'h',
+          '区域成员等待用时: ' + ((totals.all_wait_hours - (config.tc_wait_hours || 0)).toFixed(1)) + 'h',
+          '', '',
+          '',
+          '区域成员差旅费用: ' + ((totals.region_local_transport_fee + totals.region_remote_transport_fee).toFixed(1)) + '元'
+        ];
+
+        // 第三行：TC成员数据
+        const tcRow = ['', '',
+          'TC成员服务时长: ' + (config.tc_service_hours || 0) + 'h',
+          'TC成员交通用时: ' + ((totals.tc_local_transport_hours + totals.tc_remote_transport_hours).toFixed(1)) + 'h',
+          'TC成员等待用时: ' + (config.tc_wait_hours || 0) + 'h',
+          '', '',
+          '',
+          'TC成员差旅费用: ' + ((totals.tc_local_transport_fee + totals.tc_remote_transport_fee).toFixed(1)) + '元'
+        ];
+
+        const sheetData = [
+          headerRow,
+          summaryRow,
+          regionRow,
+          tcRow
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(sheetData);
         XLSX.utils.book_append_sheet(wb, ws, '统计信息');
       }
 
