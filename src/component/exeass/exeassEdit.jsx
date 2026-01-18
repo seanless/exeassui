@@ -6,8 +6,33 @@ import ExeassReport from './exeassReport';
 const { Text } = Typography;
 import "./exeassEdit.css"
 
-const ExeassEdit = ({ open, record, onCancel, onOk }) => {
+const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
   const [form] = Form.useForm();
+  useEffect(() => {
+    if (open && record) {
+      // Map record and config fields into form initial values
+      const values = {
+        ...record,
+        items: record.items || [],
+        users: record.users || [],
+      };
+      if (record.config) {
+        values.tc_service_hours = record.config.tc_service_hours;
+        values.tc_wait_hours = record.config.tc_wait_hours;
+        values.other_hours = record.config.other_hours;
+        values.local_traffic_hours = record.config.local_traffic_hours;
+        values.remote_close_traffic_hours = record.config.remote_close_traffic_hours;
+        values.local_sr_price = record.config.local_sr_price;
+        values.remote_sr_price = record.config.remote_sr_price;
+      }
+      // Ensure arrays exist to prevent Form.List from misbehaving
+      if (!Array.isArray(values.items)) values.items = [];
+      if (!Array.isArray(values.users)) values.users = [];
+      form.setFieldsValue(values);
+    } else if (!open) {
+      form.resetFields();
+    }
+  }, [open, record]);
   const [rawDataSource, setRawDataSource] = useState([]);
   const items = Form.useWatch('items', form) || [];
 
@@ -87,10 +112,15 @@ const ExeassEdit = ({ open, record, onCancel, onOk }) => {
     }
     const detailValue = record.rule[record.rule.length - 1];
     const target = rawDataSource.find(i => i.detail === detailValue);
-    if (!target) {
-      return { service_hours: 0, report_hours: 0 };
+    if (target) {
+      return { service_hours: target.service_hours, report_hours: target.report_hours, total_service_hours: target.service_hours * record.qty * record.discount, total_report_hours: target.report_hours * record.qty * record.discount };
     }
-    return { service_hours: target.service_hours, report_hours: target.report_hours, total_service_hours: target.service_hours * record.qty * record.discount, total_report_hours: target.report_hours * record.qty * record.discount };
+
+    let tmp_service_hours=record.service_hours && record.service_hours>0?record.service_hours:0;
+    let tmp_report_hours=record.report_hours&&record.report_hours>0?record.report_hours:0;
+    let tmp_total_service_hours=tmp_service_hours*record.qty*record.discount;
+    let tmp_total_report_hours=tmp_report_hours*record.qty*record.discount;
+    return { service_hours: tmp_service_hours, report_hours: tmp_report_hours, total_service_hours: tmp_total_service_hours, total_report_hours: tmp_total_report_hours };
   };
 
   const calcUserMetrics = (record) => {
@@ -218,7 +248,7 @@ const ExeassEdit = ({ open, record, onCancel, onOk }) => {
   
 
   return (
-    <Drawer open={open} onClose={onCancel} size={1224} title="新建项目">
+    <Drawer open={open} onClose={onCancel} size={1224} title="编辑项目">
       <Form form={form} layout="vertical"
         onValuesChange={(changedValues, allValues) => {
           if (changedValues.items) {
@@ -334,8 +364,8 @@ const ExeassEdit = ({ open, record, onCancel, onOk }) => {
 
                       <div style={{ paddingTop: 30 }}>
                         <Space size="middle">
-                          <Text type="secondary">服务时长: <b style={{ color: '#1890ff' }}>{rowHours.total_service_hours.toFixed(2)}</b></Text>
-                          <Text type="secondary">报告时长: <b style={{ color: '#52c41a' }}>{rowHours.total_report_hours.toFixed(2)}</b></Text>
+                          <Text type="secondary">服务时长: <b style={{ color: '#1890ff' }}>{rowHours.total_service_hours.toFixed(1)}</b></Text>
+                          <Text type="secondary">报告时长: <b style={{ color: '#52c41a' }}>{rowHours.total_report_hours.toFixed(1)}</b></Text>
                           <Button
                             type="text"
                             danger
@@ -557,8 +587,9 @@ const ExeassEdit = ({ open, record, onCancel, onOk }) => {
         </Form.Item>
       </Form>
       <ExeassReport
-        type={1}
+        type={type}
         open={reportOpen}
+        id={record.id||0}
         name={name}
         items={items}
         users={users}

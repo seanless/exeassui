@@ -10,7 +10,7 @@ import ExeassReportSchedules from './exeassReportSchedules';
 
 
 
-const ExeassReport = ({ open, type, name, initSchedules, items, users, totals, config, onCancel, onOk }) => {
+const ExeassReport = ({ open, type,id, name, initSchedules, items, users, totals, config, onCancel, onOk }) => {
   useEffect(() => {
     if (open) {
       console.log("the config is:", config);
@@ -49,7 +49,7 @@ const ExeassReport = ({ open, type, name, initSchedules, items, users, totals, c
 
 
   const onHandleOk = () => {
-    http.post("/api/assproject/save", { name: name, items: items, users: users, config: config, totals: totals, schedules: schedules }).then((result) => {
+    http.post("/api/assproject/save", {id:id, name: name, items: items, users: users, config: config, totals: totals, schedules: schedules }).then((result) => {
       if (result.code != 0) {
         message.error(result.message);
         return;
@@ -109,9 +109,9 @@ const ExeassReport = ({ open, type, name, initSchedules, items, users, totals, c
         <Button key="cancel" onClick={onCancel}>
           返回
         </Button>,
-        type == 1 ? (<Button key="submit" type="primary" onClick={onHandleOk}>
-          归档
-        </Button>) : null,
+        type == 2 ?null: (<Button key="submit" type="primary" onClick={onHandleOk}>
+          {type == 1 ? "归档" : "保存"}
+        </Button>) ,
         <Button key="export" onClick={exportExcel}>
           导出
         </Button>,

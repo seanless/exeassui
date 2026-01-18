@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Table, Button, message, Space, Popconfirm,Form ,Input } from 'antd';
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import http from "../../util/http";
 import ExeassEdit from './exeassEdit';
 import ExeassReport from './exeassReport';
@@ -14,19 +14,20 @@ const ExeassIndex = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [records, setRecords] = useState([]);
+  const [type, setType] = useState(1);  //1，新增  ，3：编辑
 
   const [record, setRecord] = useState({});
 
   const columns = [
     { title: "名称", dataIndex: "name" },
     { title: "维护项目", dataIndex: "item_names" },
-    { title: "总时长", dataIndex: "total_hours" },
-    { title: "服务时长", dataIndex: "total_service_hours" },
-    { title: "报告时长", dataIndex: "total_report_hours" },
-    { title: "交通时长", dataIndex: "total_transport_hours", },
-    { title: "等待时长", dataIndex: "total_wait_hours", },
-    { title: "Other时长", dataIndex: "total_other_hours", },
-    { title: "差旅费用", dataIndex: "total_transport_fee" },
+    { title: "总时长", dataIndex: "all_hours" },
+    { title: "服务时长", dataIndex: "all_service_hours" },
+    { title: "报告时长", dataIndex: "all_report_hours" },
+    { title: "交通时长", dataIndex: "all_transport_hours", },
+    { title: "等待时长", dataIndex: "all_wait_hours", },
+    { title: "Other时长", dataIndex: "all_other_hours", },
+    { title: "差旅费用", dataIndex: "all_transport_fee" },
     { title: "创建者", dataIndex: "creator_name" },
     { title: "创建时间", dataIndex: "create_time" },
     {
@@ -35,7 +36,7 @@ const ExeassIndex = () => {
           <div className="operation">
             <Space>
               <Button type="primary" size="small" onClick={() => { onDetail(record); }}>查看详情</Button>
-              <Button type="primary" size="small" onClick={() => { onEdit(record); }}>编辑</Button>
+              <Button type="primary" size="small" onClick={() => { onEdit(record,3); }}>编辑</Button>
               <Popconfirm title={"确定删除" + record.name} onConfirm={() => onDelete(record)}>
                 <Button type="primary" danger size="small">删除</Button>
               </Popconfirm>
@@ -69,7 +70,8 @@ const ExeassIndex = () => {
     navigate("/exeassui/home/usermanage");
   }
 
-  const onEdit = (pRecord) => {
+  const onEdit = (pRecord,pType) => {
+    setType(pType);
     setRecord(pRecord);
     setEditOpen(true);
   }
@@ -88,8 +90,6 @@ const ExeassIndex = () => {
       onQuery();
     });
   }
-
-
 
   return (
     <div style={{ marginLeft: 20, marginRight: 20 }}>
@@ -113,7 +113,7 @@ const ExeassIndex = () => {
               </Button>
             </Form.Item>
             <Form.Item>
-              <Button type='primary' onClick={onEdit}>新建项目</Button>
+              <Button type='primary' onClick={()=>{onEdit(null,1)}}>新建项目</Button>
             </Form.Item>
           </Form>
         </div>
@@ -132,7 +132,7 @@ const ExeassIndex = () => {
           pagination={false}>
         </Table>
       </div>
-      <ExeassEdit open={editOpen} onCancel={() => setEditOpen(false)} onOk={() => setEditOpen(false)} />
+      <ExeassEdit open={editOpen} type={type} record={record} onCancel={() => setEditOpen(false)} onOk={() => setEditOpen(false)} />
       <ExeassReport type={2}
         open={reportOpen}
         record={record}
