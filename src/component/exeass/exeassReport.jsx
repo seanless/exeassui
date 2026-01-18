@@ -62,34 +62,80 @@ const ExeassReport = ({ open, type,id, name, initSchedules, items, users, totals
     try {
       const wb = XLSX.utils.book_new();
 
-      // 执行计划 (schedules state)
+      // 1. 执行计划
       if (schedules && Array.isArray(schedules) && schedules.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(schedules);
+        const sheetData = schedules.map(item => ({
+          '服务内容': item.content,
+          '人数': item.user_count,
+          '单项时长': item.total_hours
+        }));
+        const ws = XLSX.utils.json_to_sheet(sheetData);
         XLSX.utils.book_append_sheet(wb, ws, '执行计划');
       }
 
-      // 项目 (items prop)
+      // 2. 项目
       if (items && Array.isArray(items) && items.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(items);
+        const sheetData = items.map(item => ({
+          '项目名称': item.rule && item.rule[2] ? item.rule[2] : '',
+          '数量': item.qty,
+          '折扣': item.discount,
+          '单项服务时长': item.service_hours,
+          '单项报告时长': item.report_hours,
+          '总服务时长': item.total_service_hours,
+          '总报告时长': item.total_report_hours
+        }));
+        const ws = XLSX.utils.json_to_sheet(sheetData);
         XLSX.utils.book_append_sheet(wb, ws, '项目');
       }
 
-      // 人员 (users prop)
+      // 3. 人员
       if (users && Array.isArray(users) && users.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(users);
+        const sheetData = users.map(item => ({
+          '人员类型': item.user_type === "region" ? "区域人员" : "TC成员",
+          '交通类型': item.traffic_type === "local" ? "本地" : "异地",
+          '人员数量': item.user_count,
+          '天数': item.days,
+          '异地大交通时长': item.remote_far_traffic_hours,
+          '异地交通费': item.remote_traffic_fee,
+          '交通时长': item.transport_hours,
+          '差旅费用': item.transport_fee
+        }));
+        const ws = XLSX.utils.json_to_sheet(sheetData);
         XLSX.utils.book_append_sheet(wb, ws, '人员');
       }
 
-      // 统计信息 (totals prop) - could be object or array
-      if (totals) {
-        if (Array.isArray(totals)) {
-          const ws = XLSX.utils.json_to_sheet(totals);
-          XLSX.utils.book_append_sheet(wb, ws, '统计信息');
-        } else if (typeof totals === 'object') {
-          const arr = Object.keys(totals).map((k) => ({ key: k, value: totals[k] }));
-          const ws = XLSX.utils.json_to_sheet(arr);
-          XLSX.utils.book_append_sheet(wb, ws, '统计信息');
-        }
+      // 4. 统计信息
+      if (totals && config) {
+        const sheetData = [
+          // 汇总数据
+          { '统计项': '所有工时', '数值': ((totals.all_service_hours +
+            totals.region_local_transport_hours +
+            totals.region_remote_transport_hours +
+            totals.tc_local_transport_hours +
+            totals.tc_remote_transport_hours +
+            totals.all_report_hours +
+            totals.all_wait_hours + totals.all_other_hours).toFixed(1)) + 'h' },
+          { '统计项': '总服务时长', '数值': totals.all_service_hours + 'h' },
+          { '统计项': '交通总用时', '数值': ((totals.region_local_transport_hours + totals.region_remote_transport_hours + totals.tc_local_transport_hours + totals.tc_remote_transport_hours).toFixed(1)) + 'h' },
+          { '统计项': '等待总工时', '数值': totals.all_wait_hours.toFixed(1) + 'h' },
+          { '统计项': '总报告时长', '数值': totals.all_report_hours.toFixed(1) + 'h' },
+          { '统计项': '总Others', '数值': totals.all_other_hours.toFixed(1) + 'h' },
+          { '统计项': '差旅总费用', '数值': ((totals.region_local_transport_fee + totals.region_remote_transport_fee + totals.tc_local_transport_fee + totals.tc_remote_transport_fee).toFixed(1)) + '元' },
+          {},
+          // 区域成员数据
+          { '统计项': '区域成员服务时长', '数值': ((totals.all_service_hours - (config.tc_service_hours || 0)).toFixed(1)) + 'h' },
+          { '统计项': '区域成员交通用时', '数值': ((totals.region_local_transport_hours + totals.region_remote_transport_hours).toFixed(1)) + 'h' },
+          { '统计项': '区域成员等待用时', '数值': ((totals.all_wait_hours - (config.tc_wait_hours || 0)).toFixed(1)) + 'h' },
+          { '统计项': '区域成员差旅费用', '数值': ((totals.region_local_transport_fee + totals.region_remote_transport_fee).toFixed(1)) + '元' },
+          {},
+          // TC成员数据
+          { '统计项': 'TC成员服务时长', '数值': (config.tc_service_hours || 0) + 'h' },
+          { '统计项': 'TC成员交通用时', '数值': ((totals.tc_local_transport_hours + totals.tc_remote_transport_hours).toFixed(1)) + 'h' },
+          { '统计项': 'TC成员等待用时', '数值': (config.tc_wait_hours || 0) + 'h' },
+          { '统计项': 'TC成员差旅费用', '数值': ((totals.tc_local_transport_fee + totals.tc_remote_transport_fee).toFixed(1)) + '元' },
+        ];
+        const ws = XLSX.utils.json_to_sheet(sheetData);
+        XLSX.utils.book_append_sheet(wb, ws, '统计信息');
       }
 
       const fileName = (name || 'report') + '.xlsx';
