@@ -17,7 +17,7 @@ const AssRuleIndex = () => {
 
   const props = {
     name: 'file',
-    action: config.apiHost + '/api/rule/upload',
+    action: config.apiHost + '/api/assrule/upload',
     headers: {
     },
     onChange(info) {
@@ -103,8 +103,8 @@ const AssRuleIndex = () => {
 
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <Button onClick={() => { navigate("/exeassui/home/exeassindex") }}>返回项目</Button>
-            <Upload {...props}>
-              <Button icon={<UploadOutlined />}>初始化产线</Button>
+            <Upload {...props} style={{marginRight:20}}>
+              <Button icon={<UploadOutlined />}>初始化标准工时</Button>
             </Upload>
           </div>
         </div>

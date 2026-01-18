@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Table, Button, message, Space, Popconfirm,Form ,Input } from 'antd';
 import { useNavigate } from "react-router-dom";
 import http from "../../util/http";
+import { DateUtil } from '../../util/dateUtil';
 import ExeassEdit from './exeassEdit';
 import ExeassReport from './exeassReport';
 import "./exeassindex.css"
@@ -29,7 +30,11 @@ const ExeassIndex = () => {
     { title: "Other时长", dataIndex: "all_other_hours", },
     { title: "差旅费用", dataIndex: "all_transport_fee" },
     { title: "创建者", dataIndex: "creator_name" },
-    { title: "创建时间", dataIndex: "create_time" },
+    {
+      title: "创建时间",
+      dataIndex: "create_time",
+      render: (value) => DateUtil.formatDateTime(value)
+    },
     {
       title: "操作", key: "operation", render: (text, record) => {
         return (

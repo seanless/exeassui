@@ -349,7 +349,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
                       {/* )} */}
 
                       <Form.Item {...restField} label="数量" name={[name, 'qty']} rules={[{ required: true }]} initialValue={1}>
-                        <InputNumber min={1} placeholder="Qty" />
+                        <InputNumber min={1} precision={0} placeholder="Qty" />
                       </Form.Item>
 
                       <Form.Item {...restField} label="折扣" name={[name, 'discount']} initialValue={1}>
@@ -542,7 +542,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
                         <InputNumber min={1} precision={0} />
                       </Form.Item>
                       <Form.Item {...restField} name={[name, 'days']} label="天数" initialValue={1} rules={[{ required: true, type: 'integer' }]}>
-                        <InputNumber min={1} precision={0} />
+                        <InputNumber min={1} precision={1} step={0.5}/>
                       </Form.Item>
                       <Form.Item {...restField} label="单程交通时长" name={[name, 'remote_far_traffic_hours']} initialValue={0}>
                         <Select style={{ width: 100 }} disabled={isLocalTraffic}>
