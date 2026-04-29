@@ -6,7 +6,7 @@ import ExeassReport from './exeassReport';
 const { Text } = Typography;
 import "./exeassEdit.css"
 
-const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
+const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
   const [form] = Form.useForm();
   useEffect(() => {
     if (open && record) {
@@ -107,7 +107,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
   }, [rawDataSource]);
 
   const calcRuleHours = (record) => {
-    if (!record?.rule || !record?.qty||!record?.discount) {
+    if (!record?.rule || !record?.qty || !record?.discount) {
       return { service_hours: 0, report_hours: 0, total_service_hours: 0, total_report_hours: 0 };
     }
     const detailValue = record.rule[record.rule.length - 1];
@@ -116,10 +116,10 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
       return { service_hours: target.service_hours, report_hours: target.report_hours, total_service_hours: target.service_hours * record.qty * record.discount, total_report_hours: target.report_hours * record.qty * record.discount };
     }
 
-    let tmp_service_hours=record.service_hours && record.service_hours>0?record.service_hours:0;
-    let tmp_report_hours=record.report_hours&&record.report_hours>0?record.report_hours:0;
-    let tmp_total_service_hours=tmp_service_hours*record.qty*record.discount;
-    let tmp_total_report_hours=tmp_report_hours*record.qty*record.discount;
+    let tmp_service_hours = record.service_hours && record.service_hours > 0 ? record.service_hours : 0;
+    let tmp_report_hours = record.report_hours && record.report_hours > 0 ? record.report_hours : 0;
+    let tmp_total_service_hours = tmp_service_hours * record.qty * record.discount;
+    let tmp_total_report_hours = tmp_report_hours * record.qty * record.discount;
     return { service_hours: tmp_service_hours, report_hours: tmp_report_hours, total_service_hours: tmp_total_service_hours, total_report_hours: tmp_total_report_hours };
   };
 
@@ -163,7 +163,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
 
   const totals = useMemo(() => {
     const ruleTotals = items.reduce((acc, cur) => {
-      const {total_service_hours,total_report_hours } = calcRuleHours(cur);
+      const { total_service_hours, total_report_hours } = calcRuleHours(cur);
       return { all_service_hours: acc.all_service_hours + total_service_hours, all_report_hours: acc.all_report_hours + total_report_hours };
     }, { all_service_hours: 0, all_report_hours: 0 });
 
@@ -218,8 +218,8 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
         discount: values.discount || 1,
         service_hours: values.service_hours || 0,
         report_hours: values.report_hours || 0,
-        total_service_hours: (values.service_hours || 0)*values.discount*values.qty,
-        total_report_hours: (values.report_hours || 0)*values.discount*values.qty,
+        total_service_hours: (values.service_hours || 0) * values.discount * values.qty,
+        total_report_hours: (values.report_hours || 0) * values.discount * values.qty,
         rule: [
           values.activity_code,
           values.family_note,
@@ -242,10 +242,10 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
     });
   }
 
-  const onRuleCascaderFilter=(inputValue, path) =>{
+  const onRuleCascaderFilter = (inputValue, path) => {
     path.some(option => option.label.toLowerCase().includes(inputValue.toLowerCase()));
   }
-  
+
 
   return (
     <Drawer open={open} onClose={onCancel} size={1224} title="编辑项目">
@@ -262,7 +262,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
               if (!item.rule) {
                 return;
               }
-              const tmpData=calcRuleHours(item);
+              const tmpData = calcRuleHours(item);
               if (item.qty !== tmpData.qty || item.discount !== tmpData.discount) {
                 newItems[index] = {
                   ...item,
@@ -300,7 +300,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
               if (shouldClearRemoteFields || shouldUpdateMetrics) {
                 newUsers[index] = {
                   ...user,
-                  ...(user.traffic_type === 'local' ? { remote_far_traffic_hours: 0, remote_traffic_fee: 0 } : {remote_far_traffic_hours:user.remote_far_traffic_hours&&user.remote_far_traffic_hours>0?user.remote_far_traffic_hours:4,remote_traffic_fee:user.remote_traffic_fee&&user.remote_traffic_fee>0?user.remote_traffic_fee:200}),
+                  ...(user.traffic_type === 'local' ? { remote_far_traffic_hours: 0, remote_traffic_fee: 0 } : { remote_far_traffic_hours: user.remote_far_traffic_hours && user.remote_far_traffic_hours > 0 ? user.remote_far_traffic_hours : 4, remote_traffic_fee: user.remote_traffic_fee && user.remote_traffic_fee > 0 ? user.remote_traffic_fee : 200 }),
                   ...userMetrics,
                   total_transport_hours: (userMetrics.region_local_transport_hours + userMetrics.region_remote_transport_hours + userMetrics.tc_local_transport_hours + userMetrics.tc_remote_transport_hours).toFixed(2),
                   total_transport_fee: (userMetrics.region_local_transport_fee + userMetrics.region_remote_transport_fee + userMetrics.tc_local_transport_fee + userMetrics.tc_remote_transport_fee).toFixed(2)
@@ -342,7 +342,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
                         <Cascader options={treeData}
                           style={{ width: 600 }}
                           dropdownClassName="custom-cascader-dropdown"
-                          placeholder="请选择规则" 
+                          placeholder="请选择规则"
                           showSearch={{ onRuleCascaderFilter, onSearch: value => console.log(value) }}
                         />
                       </Form.Item>
@@ -364,8 +364,8 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
 
                       <div style={{ paddingTop: 30 }}>
                         <Space size="middle">
-                          <Text type="secondary">服务时长: <b style={{ color: '#1890ff' }}>{rowHours.total_service_hours.toFixed(1)}</b></Text>
-                          <Text type="secondary">报告时长: <b style={{ color: '#52c41a' }}>{rowHours.total_report_hours.toFixed(1)}</b></Text>
+                          <Text type="secondary">服务时长: <b style={{ color: '#1890ff' }}>{rowHours.total_service_hours.toFixed(1)}</b><span style={{ fontSize: '0.8em', color: '#999' }}>h</span></Text>
+                          <Text type="secondary">报告时长: <b style={{ color: '#52c41a' }}>{rowHours.total_report_hours.toFixed(1)}</b><span style={{ fontSize: '0.8em', color: '#999' }}>h</span></Text>
                           <Button
                             type="text"
                             danger
@@ -422,7 +422,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
             </div>
             <div className="stat-item">
               <div className="stat-label">差旅总费用</div>
-              <div className="stat-value">{(totals.region_local_transport_fee + totals.region_remote_transport_fee + totals.tc_local_transport_fee + totals.tc_remote_transport_fee).toFixed(1)}<span className="unit">元</span></div>
+              <div className="stat-value">{(totals.region_local_transport_fee + totals.region_remote_transport_fee + totals.tc_local_transport_fee + totals.tc_remote_transport_fee).toFixed(1)}<span className="unit">RMB</span></div>
             </div>
 
             {/* 分隔线占位（Grid 跨列） */}
@@ -433,7 +433,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
               <div className="stat-item"></div> {/* 第一列留空对齐 */}
               <div className="stat-item">
                 <div className="stat-label">区域成员服务时长</div>
-                <div className="stat-value">{(totals.all_service_hours - (tc_service_hours||0)).toFixed(1)}<span className="unit">h</span></div>
+                <div className="stat-value">{(totals.all_service_hours - (tc_service_hours || 0)).toFixed(1)}<span className="unit">h</span></div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">区域成员交通用时</div>
@@ -446,7 +446,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
               <div className="stat-item" style={{ gridColumn: 'span 2' }}></div> {/* 跨过报告和Others列 */}
               <div className="stat-item">
                 <div className="stat-label">区域成员差旅费用</div>
-                <div className="stat-value">{(totals.region_local_transport_fee + totals.region_remote_transport_fee).toFixed(1)}<span className="unit">元</span></div>
+                <div className="stat-value">{(totals.region_local_transport_fee + totals.region_remote_transport_fee).toFixed(1)}<span className="unit">RMB</span></div>
               </div>
             </div>
 
@@ -468,7 +468,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
               <div className="stat-item" style={{ gridColumn: 'span 2' }}></div>
               <div className="stat-item">
                 <div className="stat-label">TC成员差旅费用</div>
-                <div className="stat-value">{totals.tc_local_transport_fee + totals.tc_remote_transport_fee}<span className="unit">元</span></div>
+                <div className="stat-value">{totals.tc_local_transport_fee + totals.tc_remote_transport_fee}<span className="unit">RMB</span></div>
               </div>
             </div>
 
@@ -481,15 +481,15 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
             <div class="form-row three-cols">
               <div class="form-item">
                 <Form.Item label="TC成员服务时长" name="tc_service_hours" initialValue={0}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="TC成员服务时长" />
+                  <InputNumber min={0} max={10000000} step={0.1} placeholder="TC成员服务时长" addonAfter="h" />
                 </Form.Item></div>
               <div class="form-item">
                 <Form.Item label="TC成员等待时长" name="tc_wait_hours" initialValue={0}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="TC成员等待时长" />
+                  <InputNumber min={0} max={10000000} step={0.1} placeholder="TC成员等待时长" addonAfter="h" />
                 </Form.Item></div>
               <div class="form-item">
                 <Form.Item label="others(手续培训）" name="other_hours" initialValue={0}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="others(入场手续培训等）" />
+                  <InputNumber min={0} max={10000000} step={0.1} placeholder="others(入场手续培训等）" addonAfter="h" />
                 </Form.Item></div>
             </div>
           </div>
@@ -499,19 +499,19 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
             <div class="form-row four-cols">
               <div class="form-item">
                 <Form.Item label="同城交通时长" name="local_traffic_hours" initialValue={3}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="同城交通时长" />
+                  <InputNumber min={0} max={10000000} step={0.1} placeholder="同城交通时长" addonAfter="h" />
                 </Form.Item></div>
               <div class="form-item">
                 <Form.Item label="异地小交通时长" name="remote_close_traffic_hours" initialValue={2}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="异地小交通时长" />
+                  <InputNumber min={0} max={10000000} step={0.1} placeholder="异地小交通时长" addonAfter="h" />
                 </Form.Item></div>
               <div class="form-item">
                 <Form.Item label="同城SR差旅" name="local_sr_price" initialValue={450}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="同城SR差旅" />
+                  <InputNumber min={0} max={10000000} step={0.1} placeholder="同城SR差旅" addonAfter="RMB" />
                 </Form.Item></div>
               <div class="form-item">
                 <Form.Item label="异地SR差旅" name="remote_sr_price" initialValue={800}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="异地SR差旅" />
+                  <InputNumber min={0} max={10000000} step={0.1} placeholder="异地SR差旅" addonAfter="RMB" />
                 </Form.Item></div>
             </div>
           </div>
@@ -541,11 +541,11 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
                       <Form.Item {...restField} name={[name, 'user_count']} label="人员数量" initialValue={1} rules={[{ required: true, type: 'integer' }]}>
                         <InputNumber min={1} precision={0} />
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'days']} label="天数" initialValue={1} rules={[{ required: true, type: 'integer' }]}>
-                        <InputNumber min={1} precision={1} step={0.5}/>
+                      <Form.Item {...restField} name={[name, 'days']} label="天数" initialValue={1} rules={[{ required: true }]}>
+                        <InputNumber min={1} precision={1} step={0.5} />
                       </Form.Item>
-                      <Form.Item {...restField} label="单程交通时长" name={[name, 'remote_far_traffic_hours']} initialValue={0}>
-                        <Select style={{ width: 100 }} disabled={isLocalTraffic}>
+                      <Form.Item {...restField} label="单程交通时长(h)" name={[name, 'remote_far_traffic_hours']} initialValue={0}>
+                        <Select style={{ width: 100 }} disabled={isLocalTraffic} addonAfter="h">
                           <Option value={4}>4</Option>
                           <Option value={5}>5</Option>
                           <Option value={6}>6</Option>
@@ -553,8 +553,8 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
                           <Option value={8}>8</Option>
                         </Select>
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'remote_traffic_fee']} label="单程大交通费" initialValue={0} rules={[{ required: true, type: 'integer' }]}>
-                        <Select style={{ width: 100 }} disabled={isLocalTraffic}>
+                      <Form.Item {...restField} name={[name, 'remote_traffic_fee']} label="单程大交通费(RMB)" initialValue={0} rules={[{ required: true, type: 'integer' }]}>
+                        <Select style={{ width: 100 }} disabled={isLocalTraffic} addonAfter="RMB">
                           <Option value={200}>200</Option>
                           <Option value={400}>400</Option>
                           <Option value={800}>800</Option>
@@ -568,7 +568,7 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
                       <div style={{ marginTop: 32, minWidth: 280 }}>
                         <Space size="middle">
                           <Text type="secondary">交通用时: <b style={{ color: '#fa8c16' }}>{(userMetrics.region_local_transport_hours + userMetrics.region_remote_transport_hours + userMetrics.tc_local_transport_hours + userMetrics.tc_remote_transport_hours).toFixed(1)}h</b></Text>
-                          <Text type="secondary">差旅费用: <b style={{ color: '#eb2f96' }}>¥{(userMetrics.region_local_transport_fee + userMetrics.region_remote_transport_fee + userMetrics.tc_local_transport_fee + userMetrics.tc_remote_transport_fee).toFixed(1)}</b></Text>
+                          <Text type="secondary">差旅费用: <b style={{ color: '#eb2f96' }}>{(userMetrics.region_local_transport_fee + userMetrics.region_remote_transport_fee + userMetrics.tc_local_transport_fee + userMetrics.tc_remote_transport_fee).toFixed(1)}RMB</b></Text>
                         </Space>
                       </div>
                       <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)} style={{ marginTop: 30 }} />
@@ -589,12 +589,12 @@ const ExeassEdit = ({ open,type, record, onCancel, onOk }) => {
       <ExeassReport
         type={type}
         open={reportOpen}
-        id={record?.id||0}
+        id={record?.id || 0}
         name={name}
         items={items}
         users={users}
         totals={totals}
-        config={{tc_service_hours: tc_service_hours||0, tc_wait_hours: tc_wait_hours||0, local_traffic_hours: local_traffic_hours||0, remote_close_traffic_hours: remote_close_traffic_hours||0, local_sr_price: local_sr_price||400, remote_sr_price: remote_sr_price||800 }}
+        config={{ tc_service_hours: tc_service_hours || 0, tc_wait_hours: tc_wait_hours || 0, local_traffic_hours: local_traffic_hours || 0, remote_close_traffic_hours: remote_close_traffic_hours || 0, local_sr_price: local_sr_price || 400, remote_sr_price: remote_sr_price || 800 }}
         onCancel={() => { setReportOpen(false) }}
         onOk={() => { setReportOpen(false) }} />
 
