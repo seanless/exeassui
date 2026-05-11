@@ -24,6 +24,12 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
         values.remote_close_traffic_hours = record.config.remote_close_traffic_hours;
         values.local_sr_price = record.config.local_sr_price;
         values.remote_sr_price = record.config.remote_sr_price;
+        values.estimate_days = record.config.estimate_days;
+        values.estimate_peoples = record.config.estimate_peoples;
+        values.city = record.config.city;
+        if (record.config.city) {
+          setSelectedCity(record.config.city);
+        }
       }
       // Ensure arrays exist to prevent Form.List from misbehaving
       if (!Array.isArray(values.items)) values.items = [];
@@ -31,6 +37,7 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
       form.setFieldsValue(values);
     } else if (!open) {
       form.resetFields();
+      setSelectedCity(undefined);
     }
   }, [open, record]);
   const [rawDataSource, setRawDataSource] = useState([]);
@@ -39,6 +46,7 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
   const tc_service_hours = Form.useWatch('tc_service_hours', form);
   const other_hours = Form.useWatch('other_hours', form) || 0;
   const tc_wait_hours = Form.useWatch("tc_wait_hours", form);
+  const estimate_days = Form.useWatch('estimate_days', form) || 0;
 
   const local_traffic_hours = Form.useWatch('local_traffic_hours', form);
   const remote_close_traffic_hours = Form.useWatch('remote_close_traffic_hours', form);
@@ -51,6 +59,8 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
   const [reportOpen, setReportOpen] = useState(false);
   const [customModalOpen, setCustomModalOpen] = useState(false);
   const [customForm] = Form.useForm();
+  const [cityPersonData, setCityPersonData] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(undefined);
 
   const user_metric_default = {
     region_local_user_count: 0,
@@ -76,7 +86,18 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
 
   useEffect(() => {
     onFetchRules();
+    onFetchCityPerson();
   }, [])
+
+  const onFetchCityPerson = () => {
+    http.post("/api/asscityperson/query").then((result) => {
+      if (result.code != 0) {
+        message.error(result.message);
+        return;
+      }
+      setCityPersonData(result.data || []);
+    });
+  }
 
   const onFetchRules = () => {
     http.post("/api/assrule/query").then((result) => {
@@ -125,7 +146,7 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
 
   const calcUserMetrics = (record) => {
     const { user_count = 0, days = 0, traffic_type, user_type, remote_traffic_fee = 0, remote_far_traffic_hours = 8 } = record || {};
-    if (!user_type || !traffic_type || user_count < 1 || days < 1) {
+    if (!user_type || !traffic_type || user_count < 1 || days < 0) {
       return user_metric_default;
     }
 
@@ -140,7 +161,7 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
       } else if (traffic_type === 'remote') {
         values.region_remote_days = days;
         values.region_remote_user_count = user_count;
-        values.region_remote_transport_hours = (user_count * days * remote_close_traffic_hours) + (user_count * 2 * remote_far_traffic_hours);
+        values.region_remote_transport_hours = (user_count * (days === 0 ? 1 : days) * remote_close_traffic_hours) + (user_count * 2 * remote_far_traffic_hours);
         values.region_remote_transport_fee = user_count * (days + 1) * remote_sr_price + user_count * 2 * remote_traffic_fee;
       }
     } else if (user_type === 'tc') {
@@ -152,7 +173,7 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
       } else if (traffic_type === 'remote') {
         values.tc_remote_days = days;
         values.tc_remote_user_count = user_count;
-        values.tc_remote_transport_hours = (user_count * days * remote_close_traffic_hours) + (user_count * 2 * remote_far_traffic_hours);
+        values.tc_remote_transport_hours = (user_count * (days === 0 ? 1 : days) * remote_close_traffic_hours) + (user_count * 2 * remote_far_traffic_hours);
         values.tc_remote_transport_fee = user_count * (days + 1) * remote_sr_price + user_count * 2 * remote_traffic_fee;
       }
     }
@@ -201,6 +222,15 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
     };
   }, [items, users, rawDataSource, other_hours]);
 
+  const estimate_peoples = useMemo(() => {
+    if (!estimate_days || estimate_days <= 0) return 0;
+    return Math.max(1, Math.round(totals.all_service_hours / 8 / estimate_days));
+  }, [totals.all_service_hours, estimate_days]);
+
+  useEffect(() => {
+    form.setFieldsValue({ estimate_peoples });
+  }, [estimate_peoples]);
+
   const onReport = () => {
     setReportOpen(true);
   }
@@ -248,7 +278,7 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
 
 
   return (
-    <Drawer open={open} onClose={onCancel} size={1224} title="编辑项目">
+    <Drawer open={open} onClose={onCancel} size={1450} title="编辑项目">
       <Form form={form} layout="vertical"
         onValuesChange={(changedValues, allValues) => {
           if (changedValues.items) {
@@ -475,44 +505,117 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
           </div>
         </div>
 
-        <div class="plan-container">
-          <div class="panel left-panel">
-            <div class="panel-title">时长设置</div>
-            <div class="form-row three-cols">
-              <div class="form-item">
-                <Form.Item label="TC成员服务时长" name="tc_service_hours" initialValue={0}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="TC成员服务时长" addonAfter="h" />
-                </Form.Item></div>
-              <div class="form-item">
-                <Form.Item label="TC成员等待时长" name="tc_wait_hours" initialValue={0}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="TC成员等待时长" addonAfter="h" />
-                </Form.Item></div>
-              <div class="form-item">
-                <Form.Item label="others(手续培训）" name="other_hours" initialValue={0}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="others(入场手续培训等）" addonAfter="h" />
-                </Form.Item></div>
+        <div className="plan-container">
+          <div className="panel plan-inline-panel">
+            {/* 第一行：时长设置 + benchmark */}
+            <div className="plan-title-row">
+              <div className="plan-title-section" style={{ flex: 3 }}>时长设置</div>
+              <div className="plan-title-section" style={{ flex: 4 }}>benchmark</div>
             </div>
-          </div>
+            <div className="plan-inline-row">
+              <div style={{ flex: 3, display: 'flex', gap: 8 }}>
+                <div className="plan-inline-item plan-item-flex">
+                  <Form.Item label="TC成员服务时长" name="tc_service_hours" initialValue={0}>
+                    <InputNumber min={0} max={10000000} step={0.1} placeholder="TC成员服务时长" addonAfter="h" />
+                  </Form.Item>
+                </div>
+                <div className="plan-inline-item plan-item-flex">
+                  <Form.Item label="TC成员等待时长" name="tc_wait_hours" initialValue={0}>
+                    <InputNumber min={0} max={10000000} step={0.1} placeholder="TC成员等待时长" addonAfter="h" />
+                  </Form.Item>
+                </div>
+                <div className="plan-inline-item plan-item-flex">
+                  <Form.Item label="others(手续培训）" name="other_hours" initialValue={0}>
+                    <InputNumber min={0} max={10000000} step={0.1} placeholder="others(入场手续培训等）" addonAfter="h" />
+                  </Form.Item>
+                </div>
+              </div>
 
-          <div class="panel right-panel">
-            <div class="panel-title">benchmark</div>
-            <div class="form-row four-cols">
-              <div class="form-item">
-                <Form.Item label="同城交通时长" name="local_traffic_hours" initialValue={3}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="同城交通时长" addonAfter="h" />
-                </Form.Item></div>
-              <div class="form-item">
-                <Form.Item label="异地小交通时长" name="remote_close_traffic_hours" initialValue={2}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="异地小交通时长" addonAfter="h" />
-                </Form.Item></div>
-              <div class="form-item">
-                <Form.Item label="同城SR差旅" name="local_sr_price" initialValue={450}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="同城SR差旅" addonAfter="RMB" />
-                </Form.Item></div>
-              <div class="form-item">
-                <Form.Item label="异地SR差旅" name="remote_sr_price" initialValue={800}>
-                  <InputNumber min={0} max={10000000} step={0.1} placeholder="异地SR差旅" addonAfter="RMB" />
-                </Form.Item></div>
+              <div className="plan-section-divider"></div>
+
+              <div style={{ flex: 4, display: 'flex', gap: 8 }}>
+                <div className="plan-inline-item plan-item-flex">
+                  <Form.Item label="同城交通时长" name="local_traffic_hours" initialValue={3}>
+                    <InputNumber min={0} max={10000000} step={0.1} placeholder="同城交通时长" addonAfter="h" />
+                  </Form.Item>
+                </div>
+                <div className="plan-inline-item plan-item-flex">
+                  <Form.Item label="异地小交通时长" name="remote_close_traffic_hours" initialValue={2}>
+                    <InputNumber min={0} max={10000000} step={0.1} placeholder="异地小交通时长" addonAfter="h" />
+                  </Form.Item>
+                </div>
+                <div className="plan-inline-item plan-item-flex">
+                  <Form.Item label="同城SR差旅" name="local_sr_price" initialValue={450}>
+                    <InputNumber min={0} max={10000000} step={0.1} placeholder="同城SR差旅" addonAfter="RMB" />
+                  </Form.Item>
+                </div>
+                <div className="plan-inline-item plan-item-flex">
+                  <Form.Item label="异地SR差旅" name="remote_sr_price" initialValue={800}>
+                    <InputNumber min={0} max={10000000} step={0.1} placeholder="异地SR差旅" addonAfter="RMB" />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
+
+            {/* 第二行：预计人员安排 + 城市设置 */}
+            <div className="plan-title-row" style={{ marginTop: 12 }}>
+              <div className="plan-title-section" style={{ flex: 3 }}>预计人员安排</div>
+              <div className="plan-title-section" style={{ flex: 4 }}>本地工程师人数参考</div>
+            </div>
+            <div className="plan-inline-row">
+              <div style={{ flex: 3, display: 'flex', gap: 8 }}>
+                <div className="plan-inline-item plan-item-flex">
+                  <Form.Item label="预估执行天数" name="estimate_days" initialValue={0}>
+                    <InputNumber min={0} max={10000000} step={0.5} placeholder="预估执行天数" addonAfter="天" />
+                  </Form.Item>
+                </div>
+                <div className="city-info-box">
+                  <div className="city-info-label">所需人数</div>
+                  <div className="city-info-value text-blue">
+                    {estimate_peoples || 0}
+                    <span className="unit">人</span>
+                  </div>
+                </div>
+                <Form.Item name="estimate_peoples" hidden>
+                  <InputNumber />
+                </Form.Item>
+              </div>
+
+              <div className="plan-section-divider"></div>
+
+              <div style={{ flex: 4, display: 'flex', gap: 8 }}>
+                <div className="plan-inline-item plan-item-flex">
+                  <div className="city-info-label">选择城市</div>
+                  <Form.Item name="city" style={{ marginBottom: 0 }}>
+                    <Select
+                      placeholder="请选择城市"
+                      allowClear
+                      showSearch
+                      optionFilterProp="children"
+                      value={selectedCity}
+                      onChange={(val) => setSelectedCity(val)}
+                    >
+                      {cityPersonData.map(item => (
+                        <Select.Option key={item.city} value={item.city}>{item.city}</Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </div>
+                <div className="city-info-box">
+                  <div className="city-info-label">配电工程师</div>
+                  <div className="city-info-value text-blue">
+                    {selectedCity ? (cityPersonData.find(c => c.city === selectedCity)?.electric_count ?? 0) : '-'}
+                    <span className="unit">人</span>
+                  </div>
+                </div>
+                <div className="city-info-box">
+                  <div className="city-info-label">工控工程师</div>
+                  <div className="city-info-value text-green">
+                    {selectedCity ? (cityPersonData.find(c => c.city === selectedCity)?.control_count ?? 0) : '-'}
+                    <span className="unit">人</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -542,7 +645,7 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
                         <InputNumber min={1} precision={0} />
                       </Form.Item>
                       <Form.Item {...restField} name={[name, 'days']} label="天数" initialValue={1} rules={[{ required: true }]}>
-                        <InputNumber min={1} precision={1} step={0.5} />
+                        <InputNumber min={0} precision={1} step={0.5} />
                       </Form.Item>
                       <Form.Item {...restField} label="单程交通时长(h)" name={[name, 'remote_far_traffic_hours']} initialValue={0}>
                         <Select style={{ width: 100 }} disabled={isLocalTraffic} addonAfter="h">
@@ -594,7 +697,7 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
         items={items}
         users={users}
         totals={totals}
-        config={{ tc_service_hours: tc_service_hours || 0, tc_wait_hours: tc_wait_hours || 0, local_traffic_hours: local_traffic_hours || 0, remote_close_traffic_hours: remote_close_traffic_hours || 0, local_sr_price: local_sr_price || 400, remote_sr_price: remote_sr_price || 800 }}
+        config={{ tc_service_hours: tc_service_hours || 0, tc_wait_hours: tc_wait_hours || 0, local_traffic_hours: local_traffic_hours || 0, remote_close_traffic_hours: remote_close_traffic_hours || 0, local_sr_price: local_sr_price || 400, remote_sr_price: remote_sr_price || 800, estimate_days: estimate_days || 0, estimate_peoples: estimate_peoples || 0, city: selectedCity || '', electric_count: selectedCity ? (cityPersonData.find(c => c.city === selectedCity)?.electric_count ?? 0) : 0, control_count: selectedCity ? (cityPersonData.find(c => c.city === selectedCity)?.control_count ?? 0) : 0 }}
         onCancel={() => { setReportOpen(false) }}
         onOk={() => { setReportOpen(false) }} />
 

@@ -24,13 +24,66 @@
   border-radius: 4px;
 }
 
-/* 左 40%，右 60% */
+/* 左 58%，右 42% */
 .left-panel {
-  width: 40%;
+  width: 58%;
 }
 
 .right-panel {
-  width: 60%;
+  width: 42%;
+}
+
+/* 合并为一行的面板 */
+.plan-inline-panel {
+  width: 100%;
+}
+
+.plan-inline-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.plan-inline-row .ant-form-item {
+  margin-bottom: 0;
+}
+
+/* 标题行 - 两个标签在同一行 */
+.plan-title-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.plan-title-section {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1677ff;
+  border-bottom: 2px solid #1677ff;
+  padding-bottom: 4px;
+}
+
+/* 分区之间的分隔线 */
+.plan-section-divider {
+  width: 1px;
+  background: #d9d9d9;
+  align-self: stretch;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* 内联表单项 */
+.plan-inline-item {
+  min-width: 0;
+}
+
+.plan-item-flex {
+  flex: 1 1 0;
+}
+
+.plan-item-flex-sm {
+  flex: 0.7 1 0;
 }
 
 /* 标题 */
@@ -44,6 +97,7 @@
   display: flex;
   width: 100%;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* 三等分 */
@@ -54,6 +108,16 @@
 /* 四等分 */
 .four-cols .form-item {
   flex: 1 1 25%;
+}
+
+/* 五等分 */
+.five-cols .form-item {
+  flex: 1 1 20%;
+}
+
+/* 二等分 */
+.two-cols .form-item {
+  flex: 1 1 50%;
 }
 
 /* Form.Item 通用样式（可选） */
@@ -151,4 +215,26 @@
 
 .detail-row .stat-label {
   color: #bfbfbf;
+}
+
+/* 城市设置 - 信息展示框 */
+.city-info-box {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 8px 14px;
+  min-width: 90px;
+  text-align: center;
+}
+
+.city-info-label {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.city-info-value {
+  font-size: 20px;
+  font-weight: 700;
 }
