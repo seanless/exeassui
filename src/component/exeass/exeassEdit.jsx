@@ -649,6 +649,7 @@ const ExeassEdit = ({ open, type, record, onCancel, onOk }) => {
                       </Form.Item>
                       <Form.Item {...restField} label="单程交通时长(h)" name={[name, 'remote_far_traffic_hours']} initialValue={0}>
                         <Select style={{ width: 100 }} disabled={isLocalTraffic} addonAfter="h">
+                          <Option value={3}>3</Option>
                           <Option value={4}>4</Option>
                           <Option value={5}>5</Option>
                           <Option value={6}>6</Option>
